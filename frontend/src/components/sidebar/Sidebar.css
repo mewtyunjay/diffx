@@ -51,16 +51,21 @@
   text-align: center;
 }
 
+.sidebar-empty-section {
+  padding: 8px 12px;
+  color: #64748b;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
 .file-card {
   border: 1px solid rgba(148, 163, 184, 0.22);
   border-radius: 14px;
-  padding: 12px;
   text-align: left;
   background: rgba(15, 23, 42, 0.5);
   color: #e2e8f0;
-  cursor: pointer;
-  display: grid;
-  gap: 8px;
+  display: flex;
+  align-items: stretch;
   transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease;
 }
 
@@ -73,6 +78,47 @@
   border-color: #38bdf8;
   background: rgba(56, 189, 248, 0.16);
   box-shadow: 0 12px 18px rgba(15, 23, 42, 0.35);
+}
+
+.file-card-main {
+  flex: 1;
+  padding: 12px;
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  display: grid;
+  gap: 8px;
+  text-align: left;
+}
+
+.file-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  background: transparent;
+  border: none;
+  border-left: 1px solid rgba(148, 163, 184, 0.15);
+  color: #94a3b8;
+  font-size: 1.2rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.file-action:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.file-action-stage:hover {
+  color: #4ade80;
+  background: rgba(74, 222, 128, 0.15);
+}
+
+.file-action-unstage:hover {
+  color: #f87171;
+  background: rgba(248, 113, 113, 0.15);
 }
 
 .file-name {

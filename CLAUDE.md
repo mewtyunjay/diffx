@@ -47,7 +47,8 @@ DIFF_REPO_PATH=/path/to/repo/to/watch
 ### Frontend
 - `frontend/src/App.tsx` - Main app, state management, polling logic
 - `frontend/src/components/diff/DiffViewer.tsx` - Diff rendering with split/unified toggle
-- `frontend/src/components/sidebar/Sidebar.tsx` - File list with change counts
+- `frontend/src/components/sidebar/Sidebar.tsx` - File list with staged/unstaged sections
+- `frontend/src/components/sidebar/Accordion.tsx` - Collapsible accordion component
 
 ## Dependencies
 
@@ -58,7 +59,9 @@ DIFF_REPO_PATH=/path/to/repo/to/watch
 ## API Endpoints
 
 - `GET /health` - Health check
-- `GET /diffs/latest` - Returns `{ patch: string, updatedAt: string }`
+- `GET /diffs/latest` - Returns `{ staged: string, unstaged: string, updatedAt: string }`
+- `POST /git/stage` - Stage a file. Body: `{ filePath: string }`
+- `POST /git/unstage` - Unstage a file. Body: `{ filePath: string }`
 
 ## Development Notes
 
