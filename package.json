@@ -1,0 +1,13 @@
+{
+  "name": "diffx",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "core"
+  ],
+  "scripts": {
+    "dev": "bun --cwd frontend run dev",
+    "dev:frontend": "bun --cwd frontend run dev",
+    "dev:core": "bun --cwd core run dev"
+  }
+}

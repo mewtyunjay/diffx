@@ -1,0 +1,116 @@
+.sidebar {
+  min-height: 100vh;
+  padding: 16px;
+  background: linear-gradient(160deg, #111827 0%, #0b1222 45%, #0a1a17 100%);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  color: var(--text-primary);
+  gap: 16px;
+}
+
+.collapse-toggle {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: #e2e8f0;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sidebar-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.sidebar-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sidebar-empty {
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.6);
+  color: #94a3b8;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.file-card {
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 14px;
+  padding: 12px;
+  text-align: left;
+  background: rgba(15, 23, 42, 0.5);
+  color: #e2e8f0;
+  cursor: pointer;
+  display: grid;
+  gap: 8px;
+  transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease;
+}
+
+.file-card:hover {
+  transform: translateY(-1px);
+  border-color: rgba(248, 250, 252, 0.5);
+}
+
+.file-card.is-active {
+  border-color: #38bdf8;
+  background: rgba(56, 189, 248, 0.16);
+  box-shadow: 0 12px 18px rgba(15, 23, 42, 0.35);
+}
+
+.file-name {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #f8fafc;
+  word-break: break-word;
+}
+
+.file-stats {
+  display: flex;
+  gap: 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.file-add {
+  color: #4ade80;
+}
+
+.file-del {
+  color: #f87171;
+}
+
+.sidebar[data-collapsed='true'] .sidebar-title,
+.sidebar[data-collapsed='true'] .sidebar-content {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .sidebar {
+    min-height: auto;
+    flex-direction: row;
+    justify-content: flex-end;
+  }
+
+  .sidebar-header {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
