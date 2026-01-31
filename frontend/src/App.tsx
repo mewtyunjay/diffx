@@ -1,6 +1,7 @@
 import { parsePatchFiles, type FileDiffMetadata } from '@pierre/diffs'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Chatbox } from './components/chat/Chatbox'
+import { ModeToggle, type Mode } from './components/chat/ModeToggle'
 import { DiffViewer } from './components/diff/DiffViewer'
 import { Sidebar, type SidebarFile } from './components/sidebar/Sidebar'
 import './App.css'
@@ -37,6 +38,7 @@ function App() {
   const [stagedPatch, setStagedPatch] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [selectedKey, setSelectedKey] = useState<string | null>(null)
+  const [mode, setMode] = useState<Mode>('learn')
 
   const stagedFiles = useMemo(() => parseFileDiffs(stagedPatch, 'staged'), [stagedPatch])
   const unstagedFiles = useMemo(() => parseFileDiffs(unstagedPatch, 'unstaged'), [unstagedPatch])
@@ -154,6 +156,7 @@ function App() {
         </div>
         <div className="main-chat">
           <Chatbox />
+          <ModeToggle mode={mode} onModeChange={setMode} />
         </div>
       </main>
     </div>

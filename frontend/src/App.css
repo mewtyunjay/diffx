@@ -29,6 +29,9 @@
 
 .main-chat {
   flex-shrink: 0;
+  display: flex;
+  gap: 16px;
+  align-items: stretch;
 }
 
 @media (max-width: 720px) {
