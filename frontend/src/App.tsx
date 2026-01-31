@@ -1,5 +1,6 @@
 import { parsePatchFiles, type FileDiffMetadata } from '@pierre/diffs'
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Chatbox } from './components/chat/Chatbox'
 import { DiffViewer } from './components/diff/DiffViewer'
 import { Sidebar, type SidebarFile } from './components/sidebar/Sidebar'
 import './App.css'
@@ -143,12 +144,17 @@ function App() {
         onToggle={() => setIsCollapsed((prev) => !prev)}
       />
       <main className="main">
-        <DiffViewer
-          patch={combinedPatch}
-          error={error}
-          fileDiffs={allFileDiffs}
-          selectedFile={selectedFile?.fileDiff ?? null}
-        />
+        <div className="main-content">
+          <DiffViewer
+            patch={combinedPatch}
+            error={error}
+            fileDiffs={allFileDiffs}
+            selectedFile={selectedFile?.fileDiff ?? null}
+          />
+        </div>
+        <div className="main-chat">
+          <Chatbox />
+        </div>
       </main>
     </div>
   )

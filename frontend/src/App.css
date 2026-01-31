@@ -11,10 +11,24 @@
 
 .main {
   display: flex;
+  flex-direction: column;
+  padding: 24px;
+  gap: 24px;
+  background: radial-gradient(circle at top, #f8fafc, #e2e8f0 65%, #cbd5f5 100%);
+  overflow: hidden;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
   align-items: center;
   justify-content: center;
-  padding: 32px;
-  background: radial-gradient(circle at top, #f8fafc, #e2e8f0 65%, #cbd5f5 100%);
+  min-height: 0;
+  overflow: auto;
+}
+
+.main-chat {
+  flex-shrink: 0;
 }
 
 @media (max-width: 720px) {
