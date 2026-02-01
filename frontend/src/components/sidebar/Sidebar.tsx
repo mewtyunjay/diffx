@@ -39,7 +39,9 @@ export function Sidebar({
   const [commitError, setCommitError] = useState<string | null>(null)
   const [pushLoading, setPushLoading] = useState(false)
   const [pushError, setPushError] = useState<string | null>(null)
+  const [autoGenerateLoading, setAutoGenerateLoading] = useState(false)
   const canCommit = Boolean(repoPath) && stagedFiles.length > 0
+  const hasChanges = totalFiles > 0
 
   const handleCommit = async () => {
     const message = commitMessage.trim()
@@ -69,6 +71,41 @@ export function Sidebar({
       setPushError(error instanceof Error ? error.message : 'Failed to push.')
     } finally {
       setPushLoading(false)
+    }
+  }
+
+  const handleAutoGenerate = async () => {
+    if (!hasChanges) return
+    setAutoGenerateLoading(true)
+    setCommitError(null)
+    try {
+      const response = await fetch('http://localhost:3001/ai/commit-message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          commitConfig: {
+            style: 'conventional',
+            includeBody: true,
+          },
+        }),
+      })
+      if (!response.ok) {
+        const data = (await response.json()) as { error?: string }
+        throw new Error(data.error || `Failed to generate commit message (${response.status})`)
+      }
+      const data = (await response.json()) as { subject?: string; body?: string | null }
+      if (typeof data.subject === 'string') {
+        const fullMessage = data.body
+          ? `${data.subject}\n\n${data.body}`
+          : data.subject
+        setCommitMessage(fullMessage)
+      } else {
+        throw new Error('Invalid response from server')
+      }
+    } catch (error) {
+      setCommitError(error instanceof Error ? error.message : 'Failed to generate commit message.')
+    } finally {
+      setAutoGenerateLoading(false)
     }
   }
 
@@ -210,8 +247,12 @@ export function Sidebar({
               <button type="button" onClick={() => void handleCommit()} disabled={commitLoading}>
                 {commitLoading ? 'Committing…' : 'Commit'}
               </button>
-              <button type="button" disabled={true} title="Auto-generate coming soon">
-                Auto-generate
+              <button
+                type="button"
+                onClick={() => void handleAutoGenerate()}
+                disabled={autoGenerateLoading || !hasChanges}
+              >
+                {autoGenerateLoading ? 'Generating…' : 'Auto-generate'}
               </button>
               <button
                 type="button"
