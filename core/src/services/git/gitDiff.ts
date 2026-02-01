@@ -30,3 +30,15 @@ export async function unstageFile(repoPath: string, filePath: string): Promise<v
     cwd: repoPath,
   })
 }
+
+export async function commitChanges(repoPath: string, message: string): Promise<void> {
+  await execFileAsync('git', ['commit', '-m', message], {
+    cwd: repoPath,
+  })
+}
+
+export async function pushChanges(repoPath: string): Promise<void> {
+  await execFileAsync('git', ['push'], {
+    cwd: repoPath,
+  })
+}

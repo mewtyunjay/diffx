@@ -326,6 +326,49 @@ function App() {
     }).catch((err) => console.error('Failed to unstage file:', err))
   }, [])
 
+  const handleCommit = useCallback(
+    async (message: string) => {
+      const response = await fetch('http://localhost:3001/git/commit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message }),
+      })
+      if (!response.ok) {
+        let detail = `Failed to commit (${response.status})`
+        try {
+          const data = (await response.json()) as { error?: string }
+          if (typeof data.error === 'string' && data.error.trim()) {
+            detail = data.error
+          }
+        } catch {
+          // Ignore JSON parse errors
+        }
+        throw new Error(detail)
+      }
+      await load()
+    },
+    [load]
+  )
+
+  const handlePush = useCallback(async () => {
+    const response = await fetch('http://localhost:3001/git/push', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    })
+    if (!response.ok) {
+      let detail = `Failed to push (${response.status})`
+      try {
+        const data = (await response.json()) as { error?: string }
+        if (typeof data.error === 'string' && data.error.trim()) {
+          detail = data.error
+        }
+      } catch {
+        // Ignore JSON parse errors
+      }
+      throw new Error(detail)
+    }
+  }, [])
+
   const handleReviewSubmit = useCallback(async () => {
     const question = reviewInput.trim()
     if (!question || reviewLoading) return
@@ -407,7 +450,8 @@ function App() {
         onSelectFile={(path) => setSelectedPath(path)}
         onStageFile={handleStageFile}
         onUnstageFile={handleUnstageFile}
-        onOpenSettings={() => setSettingsOpen(true)}
+        onCommit={handleCommit}
+        onPush={handlePush}
       />
       <main className="main">
         <div className={`workspace ${reviewOpen ? 'review-open' : 'review-closed'}`}>
@@ -431,23 +475,38 @@ function App() {
             <section className="review-panel" aria-hidden={!reviewOpen}>
               <div className="review-header">
                 <span>Review</span>
-                <button
-                  type="button"
-                  className="review-clear"
-                  onClick={() => {
-                    setReviewLog([])
-                    setReviewError(null)
-                    setReviewInput('')
-                    setQuizQuestions([])
-                    setQuizAnswers({})
-                    setQuizError(null)
-                    setQuizSubmitted(false)
-                    setQuizResults([])
-                    setQuizView('quiz')
-                  }}
-                >
-                  Clear
-                </button>
+                <div className="review-header-actions">
+                  <button
+                    type="button"
+                    className="review-clear"
+                    onClick={() => {
+                      setReviewLog([])
+                      setReviewError(null)
+                      setReviewInput('')
+                      setQuizQuestions([])
+                      setQuizAnswers({})
+                      setQuizError(null)
+                      setQuizSubmitted(false)
+                      setQuizResults([])
+                      setQuizView('quiz')
+                    }}
+                  >
+                    Clear
+                  </button>
+                  <button
+                    type="button"
+                    className="review-settings"
+                    aria-label="Open settings"
+                    onClick={() => setSettingsOpen(true)}
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path
+                        d="M10.6 2.1h2.8l.5 2.2a7.7 7.7 0 0 1 1.9.8l2-1.2 2 2-1.2 2a7.7 7.7 0 0 1 .8 1.9l2.2.5v2.8l-2.2.5a7.7 7.7 0 0 1-.8 1.9l1.2 2-2 2-2-1.2a7.7 7.7 0 0 1-1.9.8l-.5 2.2h-2.8l-.5-2.2a7.7 7.7 0 0 1-1.9-.8l-2 1.2-2-2 1.2-2a7.7 7.7 0 0 1-.8-1.9L2 13.4v-2.8l2.2-.5a7.7 7.7 0 0 1 .8-1.9l-1.2-2 2-2 2 1.2a7.7 7.7 0 0 1 1.9-.8l.5-2.2Zm1.4 6.4a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"
+                        fill="currentColor"
+                      />
+                    </svg>
+                  </button>
+                </div>
               </div>
               <div className="review-tabs" role="tablist" aria-label="Review modes">
                 <button

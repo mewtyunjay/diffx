@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Accordion } from './Accordion'
 import './Sidebar.css'
 
@@ -16,7 +17,8 @@ type SidebarProps = {
   onSelectFile: (path: string) => void
   onStageFile: (filePath: string) => void
   onUnstageFile: (filePath: string) => void
-  onOpenSettings: () => void
+  onCommit: (message: string) => Promise<void>
+  onPush: () => Promise<void>
 }
 
 export function Sidebar({
@@ -27,9 +29,48 @@ export function Sidebar({
   onSelectFile,
   onStageFile,
   onUnstageFile,
-  onOpenSettings,
+  onCommit,
+  onPush,
 }: SidebarProps) {
   const totalFiles = stagedFiles.length + unstagedFiles.length
+  const [commitOpen, setCommitOpen] = useState(false)
+  const [commitMessage, setCommitMessage] = useState('')
+  const [commitLoading, setCommitLoading] = useState(false)
+  const [commitError, setCommitError] = useState<string | null>(null)
+  const [pushLoading, setPushLoading] = useState(false)
+  const [pushError, setPushError] = useState<string | null>(null)
+  const canCommit = Boolean(repoPath) && stagedFiles.length > 0
+
+  const handleCommit = async () => {
+    const message = commitMessage.trim()
+    if (!message) {
+      setCommitError('Commit message is required.')
+      return
+    }
+    setCommitLoading(true)
+    setCommitError(null)
+    try {
+      await onCommit(message)
+      setCommitMessage('')
+      setCommitOpen(false)
+    } catch (error) {
+      setCommitError(error instanceof Error ? error.message : 'Failed to commit.')
+    } finally {
+      setCommitLoading(false)
+    }
+  }
+
+  const handlePush = async () => {
+    setPushLoading(true)
+    setPushError(null)
+    try {
+      await onPush()
+    } catch (error) {
+      setPushError(error instanceof Error ? error.message : 'Failed to push.')
+    } finally {
+      setPushLoading(false)
+    }
+  }
 
   return (
     <aside className="sidebar">
@@ -126,10 +167,68 @@ export function Sidebar({
           </>
         )}
       </div>
-      <div className="sidebar-footer">
-        <button type="button" className="sidebar-settings" onClick={onOpenSettings}>
-          Settings
+      <div className="sidebar-actions">
+        <div className="sidebar-separator" />
+        <div className="sidebar-action-row">
+          <button
+            type="button"
+            className="sidebar-action-btn"
+            onClick={() => {
+              if (!canCommit) return
+              setCommitOpen(true)
+              setCommitError(null)
+            }}
+            disabled={!canCommit || commitLoading}
+          >
+            Commit
+          </button>
+          <button
+            type="button"
+            className="sidebar-action-btn"
+            onClick={() => void handlePush()}
+            disabled={!repoPath || pushLoading}
+          >
+            Push
+          </button>
+        </div>
+        <button type="button" className="sidebar-action-btn" disabled={true} title="Coming soon">
+          Review code
         </button>
+        {pushError ? <div className="sidebar-action-error">{pushError}</div> : null}
+        {commitOpen ? (
+          <div className="sidebar-commit">
+            <label className="sidebar-commit-label" htmlFor="sidebar-commit-message">
+              Commit message
+            </label>
+            <textarea
+              id="sidebar-commit-message"
+              rows={3}
+              value={commitMessage}
+              onChange={(event) => setCommitMessage(event.target.value)}
+              placeholder="Describe what changed"
+              disabled={commitLoading}
+            />
+            {commitError ? <div className="sidebar-action-error">{commitError}</div> : null}
+            <div className="sidebar-commit-actions">
+              <button type="button" onClick={() => void handleCommit()} disabled={commitLoading}>
+                {commitLoading ? 'Committing…' : 'Commit'}
+              </button>
+              <button type="button" disabled={true} title="Auto-generate coming soon">
+                Auto-generate
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setCommitOpen(false)
+                  setCommitError(null)
+                }}
+                disabled={commitLoading}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : null}
       </div>
     </aside>
   )

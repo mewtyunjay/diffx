@@ -84,6 +84,12 @@
   margin-bottom: 12px;
 }
 
+.review-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .review-header button {
   border: 2px solid var(--border-strong);
   background: var(--bg-panel-muted);
@@ -97,6 +103,18 @@
 
 .review-header button.review-clear {
   color: var(--text-primary);
+}
+
+.review-header button.review-settings {
+  padding: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.review-header button.review-settings svg {
+  width: 16px;
+  height: 16px;
 }
 
 .review-tabs {
