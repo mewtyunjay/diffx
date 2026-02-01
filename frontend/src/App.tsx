@@ -107,6 +107,30 @@ function App() {
   const [quizView, setQuizView] = useState<'quiz' | 'results'>('quiz')
   const [quizResults, setQuizResults] = useState<QuizResult[]>([])
 
+  type ReviewFinding = {
+    category: 'bug' | 'security' | 'quality'
+    severity: 'critical' | 'warning' | 'suggestion'
+    title: string
+    description: string
+    file?: string
+    line?: number
+  }
+  type CodeReviewResult = {
+    summary: string
+    findings: ReviewFinding[]
+    stats: {
+      bugs: number
+      security: number
+      quality: number
+      critical: number
+      warnings: number
+      suggestions: number
+    }
+  }
+  const [codeReviewResult, setCodeReviewResult] = useState<CodeReviewResult | null>(null)
+  const [codeReviewLoading, setCodeReviewLoading] = useState(false)
+  const [codeReviewError, setCodeReviewError] = useState<string | null>(null)
+
   useEffect(() => {
     saveSettings(settings)
   }, [settings])
@@ -271,6 +295,34 @@ function App() {
       }
     } catch (error) {
       console.error('Failed to load quiz results:', error)
+    }
+  }, [])
+
+  const fetchCodeReview = useCallback(async () => {
+    setCodeReviewLoading(true)
+    setCodeReviewError(null)
+    try {
+      const response = await fetch('http://localhost:3001/ai/code-review', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reviewConfig: {
+            enableBugHunter: true,
+            enableSecurity: true,
+            enableQuality: true,
+          },
+        }),
+      })
+      if (!response.ok) {
+        const data = (await response.json()) as { error?: string }
+        throw new Error(data.error || `Code review failed (${response.status})`)
+      }
+      const data = (await response.json()) as CodeReviewResult
+      setCodeReviewResult(data)
+    } catch (error) {
+      setCodeReviewError(error instanceof Error ? error.message : 'Code review failed.')
+    } finally {
+      setCodeReviewLoading(false)
     }
   }, [])
 
@@ -490,6 +542,8 @@ function App() {
                       setQuizSubmitted(false)
                       setQuizResults([])
                       setQuizView('quiz')
+                      setCodeReviewResult(null)
+                      setCodeReviewError(null)
                     }}
                   >
                     Clear
@@ -652,12 +706,72 @@ function App() {
                 )}
                 {reviewMode === 'review' && (
                   <div className="review-code-panel">
-                    <p className="review-code-placeholder">
-                      Code review feature coming soon. This will provide AI-powered code review suggestions for your changes.
-                    </p>
+                    {codeReviewLoading && <p className="review-status">Running code review agents...</p>}
+                    {codeReviewError && <p className="review-error">{codeReviewError}</p>}
+                    {!codeReviewLoading && !codeReviewError && !codeReviewResult && (
+                      <p className="review-code-placeholder">
+                        Run AI-powered code review to analyze your changes for bugs, security issues, and code quality.
+                      </p>
+                    )}
+                    {!codeReviewLoading && codeReviewResult && (
+                      <div className="code-review-results">
+                        <div className="code-review-summary">
+                          <p>{codeReviewResult.summary}</p>
+                        </div>
+                        <div className="code-review-stats">
+                          <span className="stat-bugs" title="Bugs">
+                            🐛 {codeReviewResult.stats.bugs}
+                          </span>
+                          <span className="stat-security" title="Security">
+                            🔒 {codeReviewResult.stats.security}
+                          </span>
+                          <span className="stat-quality" title="Quality">
+                            ✨ {codeReviewResult.stats.quality}
+                          </span>
+                        </div>
+                        {codeReviewResult.findings.length > 0 && (
+                          <div className="code-review-findings">
+                            {codeReviewResult.findings.map((finding, index) => (
+                              <div
+                                key={index}
+                                className={`code-review-finding severity-${finding.severity}`}
+                              >
+                                <div className="finding-header">
+                                  <span className={`finding-badge category-${finding.category}`}>
+                                    {finding.category}
+                                  </span>
+                                  <span className={`finding-badge severity-${finding.severity}`}>
+                                    {finding.severity}
+                                  </span>
+                                </div>
+                                <div className="finding-title">{finding.title}</div>
+                                <div className="finding-description">{finding.description}</div>
+                                {finding.file && (
+                                  <div className="finding-location">
+                                    📄 {finding.file}
+                                    {finding.line && `:${finding.line}`}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
+              {reviewMode === 'review' && (
+                <div className="code-review-generate-row">
+                  <button
+                    type="button"
+                    onClick={fetchCodeReview}
+                    disabled={codeReviewLoading || !hasChanges}
+                  >
+                    {codeReviewLoading ? 'Reviewing...' : 'Generate Review'}
+                  </button>
+                </div>
+              )}
               {reviewMode === 'quiz' && (
                 <>
                   {quizView === 'quiz' && (

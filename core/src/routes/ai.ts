@@ -6,6 +6,7 @@ import { buildCombinedDiff, extractFileDiff } from '../services/ai/diffContext'
 import { buildQuiz } from '../services/ai/quiz'
 import { answerQuestion, decideScope } from '../services/ai/review'
 import { generateCommitMessage, type CommitMessageStyle } from '../services/ai/commitMessage'
+import { runCodeReview } from '../services/ai/codeReview'
 import { appendQuizResult, readQuizResults } from '../services/quizResults'
 
 export const aiRouter = Router()
@@ -125,6 +126,41 @@ aiRouter.post('/ai/commit-message', async (req, res) => {
   } catch (error) {
     console.error('AI commit message generation failed:', error)
     res.status(500).json({ error: 'AI commit message generation failed' })
+  }
+})
+
+aiRouter.post('/ai/code-review', async (req, res) => {
+  if (!env.openaiApiKey) {
+    res.status(503).json({ error: 'OPENAI_API_KEY not configured' })
+    return
+  }
+
+  const reviewConfig = req.body?.reviewConfig
+  const enableBugHunter = reviewConfig?.enableBugHunter !== false
+  const enableSecurity = reviewConfig?.enableSecurity !== false
+  const enableQuality = reviewConfig?.enableQuality !== false
+
+  const repoPath = getRepoPath()
+  const latest = getLatestDiff()
+  const fullDiff = buildCombinedDiff(latest)
+
+  if (!fullDiff.trim()) {
+    res.status(400).json({ error: 'No changes to review' })
+    return
+  }
+
+  try {
+    const result = await runCodeReview({
+      repoPath,
+      fullDiff,
+      enableBugHunter,
+      enableSecurity,
+      enableQuality,
+    })
+    res.json(result)
+  } catch (error) {
+    console.error('AI code review failed:', error)
+    res.status(500).json({ error: 'AI code review failed' })
   }
 })
 

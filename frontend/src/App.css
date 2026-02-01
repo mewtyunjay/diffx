@@ -272,6 +272,154 @@
   line-height: 1.5;
 }
 
+/* Code Review Styles */
+.code-review-results {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.code-review-summary {
+  padding: 12px;
+  background: var(--bg-tertiary);
+  border-radius: 6px;
+  border-left: 3px solid var(--accent-add);
+}
+
+.code-review-summary p {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.code-review-stats {
+  display: flex;
+  gap: 16px;
+  padding: 8px 0;
+}
+
+.code-review-stats span {
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.code-review-findings {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.code-review-finding {
+  padding: 12px;
+  border-radius: 6px;
+  background: var(--bg-tertiary);
+  border-left: 3px solid var(--border-strong);
+}
+
+.code-review-finding.severity-critical {
+  border-left-color: #e53935;
+  background: rgba(229, 57, 53, 0.1);
+}
+
+.code-review-finding.severity-warning {
+  border-left-color: #fb8c00;
+  background: rgba(251, 140, 0, 0.1);
+}
+
+.code-review-finding.severity-suggestion {
+  border-left-color: #43a047;
+  background: rgba(67, 160, 71, 0.1);
+}
+
+.finding-header {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.finding-badge {
+  font-size: 0.65rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.finding-badge.category-bug {
+  background: rgba(156, 39, 176, 0.2);
+  color: #ce93d8;
+}
+
+.finding-badge.category-security {
+  background: rgba(244, 67, 54, 0.2);
+  color: #ef9a9a;
+}
+
+.finding-badge.category-quality {
+  background: rgba(33, 150, 243, 0.2);
+  color: #90caf9;
+}
+
+.finding-badge.severity-critical {
+  background: rgba(229, 57, 53, 0.3);
+  color: #ef5350;
+}
+
+.finding-badge.severity-warning {
+  background: rgba(251, 140, 0, 0.3);
+  color: #ffb74d;
+}
+
+.finding-badge.severity-suggestion {
+  background: rgba(67, 160, 71, 0.3);
+  color: #81c784;
+}
+
+.finding-title {
+  font-weight: 600;
+  font-size: 0.85rem;
+  margin-bottom: 6px;
+}
+
+.finding-description {
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.finding-location {
+  margin-top: 8px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+}
+
+.code-review-generate-row {
+  display: flex;
+  gap: 10px;
+  margin: 10px 0 6px;
+}
+
+.code-review-generate-row button {
+  flex: 1;
+  border: 2px solid var(--border-strong);
+  background: transparent;
+  color: var(--text-primary);
+  padding: 6px 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+.code-review-generate-row button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .quiz-list {
   display: flex;
   flex-direction: column;
