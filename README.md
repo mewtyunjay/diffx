@@ -2,6 +2,8 @@
 
 A real-time git diff viewer with AI-powered code review, commit message generation, and interactive quizzes. Watch your repository changes live in a split/unified view while getting AI assistance for understanding and reviewing code.
 
+![diffx interface](diffx-screenshot.png)
+
 ## How to Run
 
 ```bash

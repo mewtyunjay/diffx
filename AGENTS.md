@@ -12,6 +12,7 @@
  - Review panel modes:
    - Explain: general chat that knows the open diff and can answer about the whole commit too.
    - Quiz: evaluates the entire change set (not just the currently open diff).
+ - Strict Mode: commit/push can require a submitted quiz tied to the current diff hash; when the diff changes, a new quiz is required.
 
 ## Build, Test, and Development Commands
 - Use Bun for all installs and scripts (do not use npm/yarn/pnpm).
