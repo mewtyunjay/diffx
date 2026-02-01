@@ -3,7 +3,6 @@ import {
   buildExplainInstructions,
   buildQuizRules,
   defaultSettings,
-  type CustomMergeMode,
   type ExplainFormat,
   type ExplainScopePreference,
   type ExplainTone,
@@ -36,11 +35,6 @@ const toneOptions: { value: ExplainTone; label: string }[] = [
 const formatOptions: { value: ExplainFormat; label: string }[] = [
   { value: 'bullets', label: 'Bullet points' },
   { value: 'paragraphs', label: 'Paragraphs' },
-]
-
-const mergeOptions: { value: CustomMergeMode; label: string }[] = [
-  { value: 'append', label: 'Append to defaults' },
-  { value: 'override', label: 'Override defaults' },
 ]
 
 const difficultyOptions: { value: QuizDifficulty; label: string }[] = [
@@ -115,73 +109,69 @@ export function SettingsDrawer({ open, settings, onClose, onChange, onReset }: S
               </select>
             </label>
 
-            <div className="settings-row">
-              <label>
-                Tone
-                <select
-                  value={settings.explain.tone}
-                  onChange={(event) =>
-                    onChange({
-                      ...settings,
-                      explain: { ...settings.explain, tone: event.target.value as ExplainTone },
-                    })
-                  }
-                >
-                  {toneOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Format
-                <select
-                  value={settings.explain.format}
-                  onChange={(event) =>
-                    onChange({
-                      ...settings,
-                      explain: { ...settings.explain, format: event.target.value as ExplainFormat },
-                    })
-                  }
-                >
-                  {formatOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
+            <label>
+              Tone
+              <select
+                value={settings.explain.tone}
+                onChange={(event) =>
+                  onChange({
+                    ...settings,
+                    explain: { ...settings.explain, tone: event.target.value as ExplainTone },
+                  })
+                }
+              >
+                {toneOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Format
+              <select
+                value={settings.explain.format}
+                onChange={(event) =>
+                  onChange({
+                    ...settings,
+                    explain: { ...settings.explain, format: event.target.value as ExplainFormat },
+                  })
+                }
+              >
+                {formatOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-            <div className="settings-row">
-              <label className="settings-checkbox">
-                <input
-                  type="checkbox"
-                  checked={settings.explain.includeRisks}
-                  onChange={(event) =>
-                    onChange({
-                      ...settings,
-                      explain: { ...settings.explain, includeRisks: event.target.checked },
-                    })
-                  }
-                />
-                Highlight risks/regressions
-              </label>
-              <label className="settings-checkbox">
-                <input
-                  type="checkbox"
-                  checked={settings.explain.includeNextSteps}
-                  onChange={(event) =>
-                    onChange({
-                      ...settings,
-                      explain: { ...settings.explain, includeNextSteps: event.target.checked },
-                    })
-                  }
-                />
-                Include next steps
-              </label>
-            </div>
+            <label className="settings-checkbox">
+              <input
+                type="checkbox"
+                checked={settings.explain.includeRisks}
+                onChange={(event) =>
+                  onChange({
+                    ...settings,
+                    explain: { ...settings.explain, includeRisks: event.target.checked },
+                  })
+                }
+              />
+              Highlight risks/regressions
+            </label>
+            <label className="settings-checkbox">
+              <input
+                type="checkbox"
+                checked={settings.explain.includeNextSteps}
+                onChange={(event) =>
+                  onChange({
+                    ...settings,
+                    explain: { ...settings.explain, includeNextSteps: event.target.checked },
+                  })
+                }
+              />
+              Include next steps
+            </label>
 
             <label>
               Custom instructions
@@ -196,25 +186,6 @@ export function SettingsDrawer({ open, settings, onClose, onChange, onReset }: S
                   })
                 }
               />
-            </label>
-
-            <label>
-              Merge mode
-              <select
-                value={settings.explain.customMode}
-                onChange={(event) =>
-                  onChange({
-                    ...settings,
-                    explain: { ...settings.explain, customMode: event.target.value as CustomMergeMode },
-                  })
-                }
-              >
-                {mergeOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
             </label>
 
             <div className="settings-preview">
@@ -248,44 +219,42 @@ export function SettingsDrawer({ open, settings, onClose, onChange, onReset }: S
               />
             </label>
 
-            <div className="settings-row">
-              <label>
-                Difficulty
-                <select
-                  value={settings.quiz.difficulty}
-                  onChange={(event) =>
-                    onChange({
-                      ...settings,
-                      quiz: { ...settings.quiz, difficulty: event.target.value as QuizDifficulty },
-                    })
-                  }
-                >
-                  {difficultyOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Focus
-                <select
-                  value={settings.quiz.focus}
-                  onChange={(event) =>
-                    onChange({
-                      ...settings,
-                      quiz: { ...settings.quiz, focus: event.target.value as QuizFocus },
-                    })
-                  }
-                >
-                  {focusOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
+            <label>
+              Difficulty
+              <select
+                value={settings.quiz.difficulty}
+                onChange={(event) =>
+                  onChange({
+                    ...settings,
+                    quiz: { ...settings.quiz, difficulty: event.target.value as QuizDifficulty },
+                  })
+                }
+              >
+                {difficultyOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Focus
+              <select
+                value={settings.quiz.focus}
+                onChange={(event) =>
+                  onChange({
+                    ...settings,
+                    quiz: { ...settings.quiz, focus: event.target.value as QuizFocus },
+                  })
+                }
+              >
+                {focusOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
 
             <label className="settings-checkbox">
               <input
@@ -314,25 +283,6 @@ export function SettingsDrawer({ open, settings, onClose, onChange, onReset }: S
                   })
                 }
               />
-            </label>
-
-            <label>
-              Merge mode
-              <select
-                value={settings.quiz.customMode}
-                onChange={(event) =>
-                  onChange({
-                    ...settings,
-                    quiz: { ...settings.quiz, customMode: event.target.value as CustomMergeMode },
-                  })
-                }
-              >
-                {mergeOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
             </label>
 
             <div className="settings-preview">

@@ -3,7 +3,6 @@ export type ExplainTone = 'concise' | 'balanced' | 'detailed'
 export type ExplainFormat = 'bullets' | 'paragraphs'
 export type QuizDifficulty = 'easy' | 'medium' | 'hard'
 export type QuizFocus = 'comprehension' | 'edge-cases' | 'style' | 'bug-hunt'
-export type CustomMergeMode = 'append' | 'override'
 
 export type ExplainSettings = {
   scopePreference: ExplainScopePreference
@@ -12,7 +11,6 @@ export type ExplainSettings = {
   includeRisks: boolean
   includeNextSteps: boolean
   customInstructions: string
-  customMode: CustomMergeMode
 }
 
 export type QuizSettings = {
@@ -21,7 +19,6 @@ export type QuizSettings = {
   focus: QuizFocus
   includeExplanations: boolean
   customRules: string
-  customMode: CustomMergeMode
 }
 
 export type Settings = {
@@ -37,7 +34,6 @@ export const defaultSettings: Settings = {
     includeRisks: true,
     includeNextSteps: false,
     customInstructions: '',
-    customMode: 'append',
   },
   quiz: {
     questionCount: 5,
@@ -45,7 +41,6 @@ export const defaultSettings: Settings = {
     focus: 'comprehension',
     includeExplanations: true,
     customRules: '',
-    customMode: 'append',
   },
 }
 
@@ -122,8 +117,7 @@ export function buildExplainInstructions(settings: ExplainSettings): string {
   const custom = settings.customInstructions.trim()
 
   if (!custom) return base
-  if (settings.customMode === 'override') return custom
-  return `${base}\n${custom}`
+  return custom
 }
 
 export function buildQuizRules(settings: QuizSettings): string {
@@ -139,6 +133,5 @@ export function buildQuizRules(settings: QuizSettings): string {
   const custom = settings.customRules.trim()
 
   if (!custom) return base
-  if (settings.customMode === 'override') return custom
-  return `${base}\n${custom}`
+  return custom
 }

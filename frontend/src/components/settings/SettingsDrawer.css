@@ -97,12 +97,6 @@
   color: var(--text-muted);
 }
 
-.settings-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 10px;
-}
-
 .settings-section label {
   display: grid;
   gap: 6px;
