@@ -21,6 +21,7 @@ type SidebarProps = {
   onUnstageFile: (filePath: string) => void
   onCommit: (message: string) => Promise<void>
   onPush: () => Promise<void>
+  onStash: () => Promise<void>
 }
 
 export function Sidebar({
@@ -34,6 +35,7 @@ export function Sidebar({
   onUnstageFile,
   onCommit,
   onPush,
+  onStash,
 }: SidebarProps) {
   const totalFiles = stagedFiles.length + unstagedFiles.length
   const [commitOpen, setCommitOpen] = useState(false)
@@ -43,6 +45,9 @@ export function Sidebar({
   const [pushLoading, setPushLoading] = useState(false)
   const [pushError, setPushError] = useState<string | null>(null)
   const [autoGenerateLoading, setAutoGenerateLoading] = useState(false)
+  const [stashLoading, setStashLoading] = useState(false)
+  const [stashError, setStashError] = useState<string | null>(null)
+  const [stashConfirmOpen, setStashConfirmOpen] = useState(false)
   const canCommit = Boolean(repoPath) && stagedFiles.length > 0
   const hasChanges = totalFiles > 0
 
@@ -111,6 +116,19 @@ export function Sidebar({
       setCommitError(error instanceof Error ? error.message : 'Failed to generate commit message.')
     } finally {
       setAutoGenerateLoading(false)
+    }
+  }
+
+  const handleStash = async () => {
+    setStashLoading(true)
+    setStashError(null)
+    try {
+      await onStash()
+      setStashConfirmOpen(false)
+    } catch (error) {
+      setStashError(error instanceof Error ? error.message : 'Failed to stash.')
+    } finally {
+      setStashLoading(false)
     }
   }
 
@@ -232,8 +250,21 @@ export function Sidebar({
           >
             Push
           </button>
+          <button
+            type="button"
+            className="sidebar-action-btn"
+            onClick={() => {
+              if (!hasChanges) return
+              setStashConfirmOpen(true)
+              setStashError(null)
+            }}
+            disabled={!hasChanges || stashLoading}
+          >
+            Stash All
+          </button>
         </div>
         {pushError ? <div className="sidebar-action-error">{pushError}</div> : null}
+        {stashError ? <div className="sidebar-action-error">{stashError}</div> : null}
         {commitOpen ? (
           <div className="sidebar-commit">
             <label className="sidebar-commit-label" htmlFor="sidebar-commit-message">
@@ -266,6 +297,32 @@ export function Sidebar({
                   setCommitError(null)
                 }}
                 disabled={commitLoading}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : null}
+        {stashConfirmOpen ? (
+          <div className="sidebar-commit">
+            <div className="sidebar-stash-confirm">
+              Are you sure you want to stash all changes? This will save your current changes and revert to a clean working directory.
+            </div>
+            <div className="sidebar-commit-actions">
+              <button
+                type="button"
+                onClick={() => void handleStash()}
+                disabled={stashLoading}
+              >
+                {stashLoading ? 'Stashing…' : 'Yes, Stash'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setStashConfirmOpen(false)
+                  setStashError(null)
+                }}
+                disabled={stashLoading}
               >
                 Cancel
               </button>

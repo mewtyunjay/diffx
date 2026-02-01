@@ -421,6 +421,26 @@ function App() {
     }
   }, [])
 
+  const handleStash = useCallback(async () => {
+    const response = await fetch('http://localhost:3001/git/stash', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    })
+    if (!response.ok) {
+      let detail = `Failed to stash (${response.status})`
+      try {
+        const data = (await response.json()) as { error?: string }
+        if (typeof data.error === 'string' && data.error.trim()) {
+          detail = data.error
+        }
+      } catch {
+        // Ignore JSON parse errors
+      }
+      throw new Error(detail)
+    }
+    await load()
+  }, [load])
+
   const handleReviewSubmit = useCallback(async () => {
     const question = reviewInput.trim()
     if (!question || reviewLoading) return
@@ -505,6 +525,7 @@ function App() {
         onUnstageFile={handleUnstageFile}
         onCommit={handleCommit}
         onPush={handlePush}
+        onStash={handleStash}
       />
       <main className="main">
         <div className={`workspace ${reviewOpen ? 'review-open' : 'review-closed'}`}>

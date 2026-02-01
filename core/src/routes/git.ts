@@ -1,7 +1,7 @@
 import { Router } from 'express'
 
 import { triggerRefresh, getRepoPath } from '../services/diffs/watcher'
-import { commitChanges, pushChanges, stageFile, unstageFile } from '../services/git/gitDiff'
+import { commitChanges, pushChanges, stageFile, stashChanges, unstageFile } from '../services/git/gitDiff'
 
 export const gitRouter = Router()
 
@@ -87,5 +87,22 @@ gitRouter.post('/git/push', async (req, res) => {
   } catch (error) {
     console.error('Failed to push:', error)
     res.status(500).json({ error: 'Failed to push' })
+  }
+})
+
+gitRouter.post('/git/stash', async (req, res) => {
+  const repoPath = getRepoPath()
+  if (!repoPath) {
+    res.status(503).json({ error: 'DIFF_REPO_PATH not configured' })
+    return
+  }
+
+  try {
+    await stashChanges(repoPath)
+    triggerRefresh()
+    res.json({ ok: true })
+  } catch (error) {
+    console.error('Failed to stash:', error)
+    res.status(500).json({ error: 'Failed to stash changes' })
   }
 })
