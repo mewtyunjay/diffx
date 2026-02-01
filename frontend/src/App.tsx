@@ -70,25 +70,24 @@ function App() {
   >([])
   const [reviewLoading, setReviewLoading] = useState(false)
   const [reviewError, setReviewError] = useState<string | null>(null)
-  const [quizQuestions, setQuizQuestions] = useState<
-    { id: string; prompt: string; options: string[]; answerIndex?: number }[]
-  >([])
+  type QuizQuestion = { id: string; prompt: string; options: string[]; answerIndex?: number }
+  type QuizResult = {
+    id: number
+    score: number
+    total: number
+    answered: number
+    completedAt: string
+    questions: QuizQuestion[]
+    answers: Record<string, number | null>
+  }
+
+  const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([])
   const [quizAnswers, setQuizAnswers] = useState<Record<string, number | null>>({})
   const [quizLoading, setQuizLoading] = useState(false)
   const [quizError, setQuizError] = useState<string | null>(null)
   const [quizSubmitted, setQuizSubmitted] = useState(false)
   const [quizView, setQuizView] = useState<'quiz' | 'results'>('quiz')
-  const [quizResults, setQuizResults] = useState<
-    {
-      id: number
-      score: number
-      total: number
-      answered: number
-      completedAt: string
-      questions: { id: string; prompt: string; options: string[]; answerIndex?: number }[]
-      answers: Record<string, number | null>
-    }[]
-  >([])
+  const [quizResults, setQuizResults] = useState<QuizResult[]>([])
 
   const parsedStaged = useMemo(() => parseFileDiffs(stagedPatch, 'staged'), [stagedPatch])
   const parsedUnstaged = useMemo(() => parseFileDiffs(unstagedPatch, 'unstaged'), [unstagedPatch])
@@ -213,6 +212,19 @@ function App() {
     }
   }, [])
 
+  const loadQuizResults = useCallback(async () => {
+    try {
+      const response = await fetch('http://localhost:3001/quiz/results')
+      if (!response.ok) return
+      const data = (await response.json()) as { results?: QuizResult[] }
+      if (Array.isArray(data.results)) {
+        setQuizResults(data.results)
+      }
+    } catch (error) {
+      console.error('Failed to load quiz results:', error)
+    }
+  }, [])
+
   useEffect(() => {
     void load()
     const interval = window.setInterval(load, 1000)
@@ -220,10 +232,8 @@ function App() {
   }, [load])
 
   useEffect(() => {
-    if (reviewMode !== 'quiz') return
-    if (quizQuestions.length > 0 || quizLoading) return
-    void fetchQuiz()
-  }, [reviewMode, quizQuestions.length, quizLoading, fetchQuiz])
+    void loadQuizResults()
+  }, [loadQuizResults])
 
   useEffect(() => {
     let isMounted = true
@@ -314,18 +324,21 @@ function App() {
       return sum + (answer === question.answerIndex ? 1 : 0)
     }, 0)
     const completedAt = new Date().toLocaleString()
-    setQuizResults((prev) => [
-      {
-        id: Date.now(),
-        score,
-        total,
-        answered,
-        completedAt,
-        questions: quizQuestions,
-        answers: quizAnswers,
-      },
-      ...prev,
-    ])
+    const result = {
+      id: Date.now(),
+      score,
+      total,
+      answered,
+      completedAt,
+      questions: quizQuestions,
+      answers: quizAnswers,
+    }
+    setQuizResults((prev) => [result, ...prev])
+    fetch('http://localhost:3001/quiz/results', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ result }),
+    }).catch((error) => console.error('Failed to save quiz result:', error))
     setQuizSubmitted(true)
     setQuizView('results')
   }, [quizAnswers, quizQuestions])
@@ -480,9 +493,6 @@ function App() {
                       <>
                         {quizLoading && <p className="review-status">Generating quiz…</p>}
                         {quizError && <p className="review-error">{quizError}</p>}
-                        {!quizLoading && !quizError && quizQuestions.length === 0 && (
-                          <p>No quiz yet. Try again in a moment.</p>
-                        )}
                         {!quizLoading && !quizError && quizQuestions.length > 0 && (
                           <div className="quiz-list">
                             {quizQuestions.map((question, index) => (
@@ -515,38 +525,37 @@ function App() {
                 )}
               </div>
               {reviewMode === 'quiz' && (
-                <div className="review-footer">
-                  <span>
-                    Attempted {Object.values(quizAnswers).filter((value) => value != null).length}/
-                    {quizQuestions.length}
-                  </span>
-                  <div className="quiz-footer-actions">
-                    <button
-                      type="button"
-                      className="quiz-history"
-                      onClick={() => setQuizView((view) => (view === 'results' ? 'quiz' : 'results'))}
-                      aria-label="Quiz history"
-                      aria-pressed={quizView === 'results'}
-                    >
-                      <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path
-                          d="M8 6H3v5m1.6-1.7A8 8 0 1 1 6 18"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="square"
-                        />
-                      </svg>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleQuizSubmit}
-                      disabled={quizQuestions.length === 0}
-                    >
-                      {quizSubmitted ? 'Submitted' : 'Submit'}
-                    </button>
+                <>
+                  {quizView === 'quiz' && (
+                    <div className="quiz-generate-row">
+                      <button type="button" onClick={fetchQuiz} disabled={quizLoading}>
+                        Generate quiz
+                      </button>
+                      <button
+                        type="button"
+                        className="quiz-results-toggle"
+                        onClick={() => setQuizView('results')}
+                      >
+                        Past results
+                      </button>
+                    </div>
+                  )}
+                  <div className="review-footer">
+                    <span>
+                      Attempted {Object.values(quizAnswers).filter((value) => value != null).length}/
+                      {quizQuestions.length}
+                    </span>
+                    <div className="quiz-footer-actions">
+                      <button
+                        type="button"
+                        onClick={handleQuizSubmit}
+                        disabled={quizQuestions.length === 0}
+                      >
+                        {quizSubmitted ? 'Submitted' : 'Submit'}
+                      </button>
+                    </div>
                   </div>
-                </div>
+                </>
               )}
               {reviewMode === 'explain' && (
                 <div className="review-chat">

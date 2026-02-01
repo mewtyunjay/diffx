@@ -5,6 +5,7 @@ import { getLatestDiff, getRepoPath } from '../services/diffs/watcher'
 import { buildCombinedDiff, extractFileDiff } from '../services/ai/diffContext'
 import { buildQuiz } from '../services/ai/quiz'
 import { answerQuestion, decideScope } from '../services/ai/review'
+import { appendQuizResult, readQuizResults } from '../services/quizResults'
 
 export const aiRouter = Router()
 
@@ -67,5 +68,43 @@ aiRouter.post('/ai/quiz', async (req, res) => {
   } catch (error) {
     console.error('AI quiz failed:', error)
     res.status(500).json({ error: 'AI quiz failed' })
+  }
+})
+
+aiRouter.get('/quiz/results', async (req, res) => {
+  const repoPath = getRepoPath()
+  if (!repoPath) {
+    res.status(400).json({ error: 'Repository not selected' })
+    return
+  }
+
+  try {
+    const results = await readQuizResults(repoPath)
+    res.json({ results })
+  } catch (error) {
+    console.error('Failed to read quiz results:', error)
+    res.status(500).json({ error: 'Failed to read quiz results' })
+  }
+})
+
+aiRouter.post('/quiz/results', async (req, res) => {
+  const repoPath = getRepoPath()
+  if (!repoPath) {
+    res.status(400).json({ error: 'Repository not selected' })
+    return
+  }
+
+  const payload = req.body?.result
+  if (!payload || typeof payload !== 'object') {
+    res.status(400).json({ error: 'Result payload is required' })
+    return
+  }
+
+  try {
+    const stored = await appendQuizResult(repoPath, payload)
+    res.json({ result: stored })
+  } catch (error) {
+    console.error('Failed to save quiz result:', error)
+    res.status(500).json({ error: 'Failed to save quiz result' })
   }
 })
