@@ -447,6 +447,7 @@ function App() {
         unstagedFiles={unstagedFiles}
         selectedPath={selectedPath}
         repoPath={repoPath}
+        commitMessageSettings={settings.commitMessage}
         onSelectFile={(path) => setSelectedPath(path)}
         onStageFile={handleStageFile}
         onUnstageFile={handleUnstageFile}

@@ -1,8 +1,10 @@
 import { useEffect } from 'react'
 import {
+  buildCommitMessageRules,
   buildExplainInstructions,
   buildQuizRules,
   defaultSettings,
+  type CommitMessageStyle,
   type ExplainFormat,
   type ExplainScopePreference,
   type ExplainTone,
@@ -50,6 +52,12 @@ const focusOptions: { value: QuizFocus; label: string }[] = [
   { value: 'bug-hunt', label: 'Bug hunt' },
 ]
 
+const commitMessageStyleOptions: { value: CommitMessageStyle; label: string }[] = [
+  { value: 'conventional', label: 'Conventional (type(scope): description)' },
+  { value: 'descriptive', label: 'Descriptive (explain what and why)' },
+  { value: 'simple', label: 'Simple (short summary)' },
+]
+
 export function SettingsDrawer({ open, settings, onClose, onChange, onReset }: SettingsDrawerProps) {
   useEffect(() => {
     if (!open) return
@@ -64,6 +72,9 @@ export function SettingsDrawer({ open, settings, onClose, onChange, onReset }: S
 
   const explainPreview = buildExplainInstructions(settings.explain)
   const quizPreview = buildQuizRules(settings.quiz)
+  const commitMessagePreview = settings.commitMessage.followPreviousStyle
+    ? 'Will analyze recent commit messages to match style.'
+    : buildCommitMessageRules(settings.commitMessage)
 
   return (
     <div className="settings-overlay" onClick={onClose}>
@@ -288,6 +299,81 @@ export function SettingsDrawer({ open, settings, onClose, onChange, onReset }: S
             <div className="settings-preview">
               <span>Preview</span>
               <pre>{quizPreview || defaultSettings.quiz.customRules}</pre>
+            </div>
+          </section>
+
+          <section className="settings-section">
+            <div className="settings-section-header">
+              <h2>Commit Message</h2>
+              <p>How DiffX generates commit messages.</p>
+            </div>
+
+            <label className="settings-checkbox">
+              <input
+                type="checkbox"
+                checked={settings.commitMessage.followPreviousStyle}
+                onChange={(event) =>
+                  onChange({
+                    ...settings,
+                    commitMessage: { ...settings.commitMessage, followPreviousStyle: event.target.checked },
+                  })
+                }
+              />
+              Follow previous commit messages style
+            </label>
+
+            <label>
+              Style
+              <select
+                value={settings.commitMessage.style}
+                disabled={settings.commitMessage.followPreviousStyle}
+                onChange={(event) =>
+                  onChange({
+                    ...settings,
+                    commitMessage: { ...settings.commitMessage, style: event.target.value as CommitMessageStyle },
+                  })
+                }
+              >
+                {commitMessageStyleOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="settings-checkbox">
+              <input
+                type="checkbox"
+                checked={settings.commitMessage.includeBody}
+                onChange={(event) =>
+                  onChange({
+                    ...settings,
+                    commitMessage: { ...settings.commitMessage, includeBody: event.target.checked },
+                  })
+                }
+              />
+              Include detailed body
+            </label>
+
+            <label>
+              Custom instructions
+              <textarea
+                rows={4}
+                placeholder="Add extra instructions for commit message generation..."
+                value={settings.commitMessage.customRules}
+                onChange={(event) =>
+                  onChange({
+                    ...settings,
+                    commitMessage: { ...settings.commitMessage, customRules: event.target.value },
+                  })
+                }
+              />
+            </label>
+
+            <div className="settings-preview">
+              <span>Preview</span>
+              <pre>{commitMessagePreview}</pre>
             </div>
           </section>
         </div>

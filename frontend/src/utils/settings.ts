@@ -23,6 +23,7 @@ export type QuizSettings = {
 }
 
 export type CommitMessageSettings = {
+  followPreviousStyle: boolean
   style: CommitMessageStyle
   includeBody: boolean
   customRules: string
@@ -51,6 +52,7 @@ export const defaultSettings: Settings = {
     customRules: '',
   },
   commitMessage: {
+    followPreviousStyle: true,
     style: 'conventional',
     includeBody: true,
     customRules: '',

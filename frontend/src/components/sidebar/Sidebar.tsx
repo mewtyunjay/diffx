@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import type { CommitMessageSettings } from '../../utils/settings'
 import { Accordion } from './Accordion'
 import './Sidebar.css'
 
@@ -14,6 +15,7 @@ type SidebarProps = {
   unstagedFiles: SidebarFile[]
   selectedPath: string | null
   repoPath: string | null
+  commitMessageSettings: CommitMessageSettings
   onSelectFile: (path: string) => void
   onStageFile: (filePath: string) => void
   onUnstageFile: (filePath: string) => void
@@ -26,6 +28,7 @@ export function Sidebar({
   unstagedFiles,
   selectedPath,
   repoPath,
+  commitMessageSettings,
   onSelectFile,
   onStageFile,
   onUnstageFile,
@@ -84,8 +87,10 @@ export function Sidebar({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           commitConfig: {
-            style: 'conventional',
-            includeBody: true,
+            followPreviousStyle: commitMessageSettings.followPreviousStyle,
+            style: commitMessageSettings.style,
+            includeBody: commitMessageSettings.includeBody,
+            customRules: commitMessageSettings.customRules,
           },
         }),
       })

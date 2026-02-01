@@ -92,6 +92,8 @@ aiRouter.post('/ai/commit-message', async (req, res) => {
   }
 
   const commitConfig = req.body?.commitConfig
+  const followPreviousStyle =
+    typeof commitConfig?.followPreviousStyle === 'boolean' ? commitConfig.followPreviousStyle : true
   const style: CommitMessageStyle =
     commitConfig?.style === 'conventional' ||
     commitConfig?.style === 'descriptive' ||
@@ -114,6 +116,7 @@ aiRouter.post('/ai/commit-message', async (req, res) => {
     const result = await generateCommitMessage({
       repoPath,
       fullDiff,
+      followPreviousStyle,
       style,
       includeBody,
       customRules,
