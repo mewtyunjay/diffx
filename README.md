@@ -41,6 +41,12 @@ Open http://localhost:5173 in your browser.
 3. Click "Auto-generate" to create an AI-powered commit message
 4. Edit if needed, then click "Commit"
 
+### Strict Mode (Quiz-Gated Commit/Push)
+1. Toggle "Strict Mode" on in the sidebar
+2. Generate and submit a quiz for the current diff
+3. Commit/push are enabled only if a quiz exists for the exact diff state (diff hash)
+4. If the diff changes, take a new quiz before committing or pushing
+
 ### Explain Changes
 1. Select a file with changes
 2. Click "Explain" tab in the right panel
