@@ -5,6 +5,8 @@ import { getLatestDiff, getRepoPath } from '../services/diffs/watcher'
 import { buildCombinedDiff, extractFileDiff } from '../services/ai/diffContext'
 import { buildQuiz } from '../services/ai/quiz'
 import { answerQuestion, decideScope } from '../services/ai/review'
+import { generateCommitMessage, type CommitMessageStyle } from '../services/ai/commitMessage'
+import { runCodeReview } from '../services/ai/codeReview'
 import { appendQuizResult, readQuizResults } from '../services/quizResults'
 
 export const aiRouter = Router()
@@ -81,6 +83,84 @@ aiRouter.post('/ai/quiz', async (req, res) => {
   } catch (error) {
     console.error('AI quiz failed:', error)
     res.status(500).json({ error: 'AI quiz failed' })
+  }
+})
+
+aiRouter.post('/ai/commit-message', async (req, res) => {
+  if (!env.openaiApiKey) {
+    res.status(503).json({ error: 'OPENAI_API_KEY not configured' })
+    return
+  }
+
+  const commitConfig = req.body?.commitConfig
+  const followPreviousStyle =
+    typeof commitConfig?.followPreviousStyle === 'boolean' ? commitConfig.followPreviousStyle : true
+  const style: CommitMessageStyle =
+    commitConfig?.style === 'conventional' ||
+    commitConfig?.style === 'descriptive' ||
+    commitConfig?.style === 'simple'
+      ? commitConfig.style
+      : 'conventional'
+  const includeBody = typeof commitConfig?.includeBody === 'boolean' ? commitConfig.includeBody : true
+  const customRules = typeof commitConfig?.customRules === 'string' ? commitConfig.customRules.trim() : null
+
+  const repoPath = getRepoPath()
+  const latest = getLatestDiff()
+  const fullDiff = buildCombinedDiff(latest)
+
+  if (!fullDiff.trim()) {
+    res.status(400).json({ error: 'No changes to generate commit message for' })
+    return
+  }
+
+  try {
+    const result = await generateCommitMessage({
+      repoPath,
+      fullDiff,
+      followPreviousStyle,
+      style,
+      includeBody,
+      customRules,
+    })
+    res.json(result)
+  } catch (error) {
+    console.error('AI commit message generation failed:', error)
+    res.status(500).json({ error: 'AI commit message generation failed' })
+  }
+})
+
+aiRouter.post('/ai/code-review', async (req, res) => {
+  if (!env.openaiApiKey) {
+    res.status(503).json({ error: 'OPENAI_API_KEY not configured' })
+    return
+  }
+
+  const reviewConfig = req.body?.reviewConfig
+  const enableBugHunter = reviewConfig?.enableBugHunter !== false
+  const enableSecurity = reviewConfig?.enableSecurity !== false
+  const enableQuality = reviewConfig?.enableQuality !== false
+
+  const repoPath = getRepoPath()
+  const latest = getLatestDiff()
+  const fullDiff = buildCombinedDiff(latest)
+
+  if (!fullDiff.trim()) {
+    res.status(400).json({ error: 'No changes to review' })
+    return
+  }
+
+  try {
+    const result = await runCodeReview({
+      repoPath,
+      fullDiff,
+      enableBugHunter,
+      enableSecurity,
+      enableQuality,
+    })
+    res.json(result)
+  } catch (error) {
+    console.error('AI code review failed:', error)
+    res.status(500).json({ error: 'AI code review failed' })
   }
 })
 

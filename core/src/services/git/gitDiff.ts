@@ -42,3 +42,9 @@ export async function pushChanges(repoPath: string): Promise<void> {
     cwd: repoPath,
   })
 }
+
+export async function stashChanges(repoPath: string): Promise<void> {
+  await execFileAsync('git', ['stash', '--include-untracked'], {
+    cwd: repoPath,
+  })
+}

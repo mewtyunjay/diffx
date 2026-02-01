@@ -57,7 +57,7 @@
 
 .sidebar-action-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 8px;
 }
 
@@ -71,7 +71,7 @@
   font-size: 0.7rem;
   cursor: pointer;
   width: 100%;
-  text-align: left;
+  text-align: center;
 }
 
 .sidebar-action-btn:disabled {
@@ -140,6 +140,12 @@
 .sidebar-action-error {
   font-size: 0.75rem;
   color: rgba(255, 132, 132, 0.9);
+}
+
+.sidebar-stash-confirm {
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.5;
 }
 
 .sidebar-footer {

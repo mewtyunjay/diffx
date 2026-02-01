@@ -3,6 +3,7 @@ export type ExplainTone = 'concise' | 'balanced' | 'detailed'
 export type ExplainFormat = 'bullets' | 'paragraphs'
 export type QuizDifficulty = 'easy' | 'medium' | 'hard'
 export type QuizFocus = 'comprehension' | 'edge-cases' | 'style' | 'bug-hunt'
+export type CommitMessageStyle = 'conventional' | 'descriptive' | 'simple'
 
 export type ExplainSettings = {
   scopePreference: ExplainScopePreference
@@ -21,9 +22,17 @@ export type QuizSettings = {
   customRules: string
 }
 
+export type CommitMessageSettings = {
+  followPreviousStyle: boolean
+  style: CommitMessageStyle
+  includeBody: boolean
+  customRules: string
+}
+
 export type Settings = {
   explain: ExplainSettings
   quiz: QuizSettings
+  commitMessage: CommitMessageSettings
 }
 
 export const defaultSettings: Settings = {
@@ -40,6 +49,12 @@ export const defaultSettings: Settings = {
     difficulty: 'medium',
     focus: 'comprehension',
     includeExplanations: true,
+    customRules: '',
+  },
+  commitMessage: {
+    followPreviousStyle: true,
+    style: 'conventional',
+    includeBody: true,
     customRules: '',
   },
 }
@@ -69,10 +84,18 @@ function mergeQuizSettings(partial?: Partial<QuizSettings>): QuizSettings {
   }
 }
 
+function mergeCommitMessageSettings(partial?: Partial<CommitMessageSettings>): CommitMessageSettings {
+  return {
+    ...defaultSettings.commitMessage,
+    ...partial,
+  }
+}
+
 export function mergeSettings(partial?: Partial<Settings>): Settings {
   return {
     explain: mergeExplainSettings(partial?.explain),
     quiz: mergeQuizSettings(partial?.quiz),
+    commitMessage: mergeCommitMessageSettings(partial?.commitMessage),
   }
 }
 
@@ -127,6 +150,25 @@ export function buildQuizRules(settings: QuizSettings): string {
     settings.includeExplanations
       ? 'Include a short explanation for each answer.'
       : 'Do not include explanations.',
+  ]
+
+  const base = lines.join(' ')
+  const custom = settings.customRules.trim()
+
+  if (!custom) return base
+  return custom
+}
+
+export function buildCommitMessageRules(settings: CommitMessageSettings): string {
+  const styleDescriptions = {
+    conventional: 'Conventional commits (type(scope): description)',
+    descriptive: 'Descriptive (explain what and why)',
+    simple: 'Simple (short summary)',
+  }
+
+  const lines = [
+    `Style: ${styleDescriptions[settings.style]}.`,
+    settings.includeBody ? 'Include a detailed body.' : 'Subject line only, no body.',
   ]
 
   const base = lines.join(' ')

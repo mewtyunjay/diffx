@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import type { CommitMessageSettings } from '../../utils/settings'
 import { Accordion } from './Accordion'
 import './Sidebar.css'
 
@@ -14,11 +15,13 @@ type SidebarProps = {
   unstagedFiles: SidebarFile[]
   selectedPath: string | null
   repoPath: string | null
+  commitMessageSettings: CommitMessageSettings
   onSelectFile: (path: string) => void
   onStageFile: (filePath: string) => void
   onUnstageFile: (filePath: string) => void
   onCommit: (message: string) => Promise<void>
   onPush: () => Promise<void>
+  onStash: () => Promise<void>
 }
 
 export function Sidebar({
@@ -26,11 +29,13 @@ export function Sidebar({
   unstagedFiles,
   selectedPath,
   repoPath,
+  commitMessageSettings,
   onSelectFile,
   onStageFile,
   onUnstageFile,
   onCommit,
   onPush,
+  onStash,
 }: SidebarProps) {
   const totalFiles = stagedFiles.length + unstagedFiles.length
   const [commitOpen, setCommitOpen] = useState(false)
@@ -39,7 +44,12 @@ export function Sidebar({
   const [commitError, setCommitError] = useState<string | null>(null)
   const [pushLoading, setPushLoading] = useState(false)
   const [pushError, setPushError] = useState<string | null>(null)
+  const [autoGenerateLoading, setAutoGenerateLoading] = useState(false)
+  const [stashLoading, setStashLoading] = useState(false)
+  const [stashError, setStashError] = useState<string | null>(null)
+  const [stashConfirmOpen, setStashConfirmOpen] = useState(false)
   const canCommit = Boolean(repoPath) && stagedFiles.length > 0
+  const hasChanges = totalFiles > 0
 
   const handleCommit = async () => {
     const message = commitMessage.trim()
@@ -69,6 +79,56 @@ export function Sidebar({
       setPushError(error instanceof Error ? error.message : 'Failed to push.')
     } finally {
       setPushLoading(false)
+    }
+  }
+
+  const handleAutoGenerate = async () => {
+    if (!hasChanges) return
+    setAutoGenerateLoading(true)
+    setCommitError(null)
+    try {
+      const response = await fetch('http://localhost:3001/ai/commit-message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          commitConfig: {
+            followPreviousStyle: commitMessageSettings.followPreviousStyle,
+            style: commitMessageSettings.style,
+            includeBody: commitMessageSettings.includeBody,
+            customRules: commitMessageSettings.customRules,
+          },
+        }),
+      })
+      if (!response.ok) {
+        const data = (await response.json()) as { error?: string }
+        throw new Error(data.error || `Failed to generate commit message (${response.status})`)
+      }
+      const data = (await response.json()) as { subject?: string; body?: string | null }
+      if (typeof data.subject === 'string') {
+        const fullMessage = data.body
+          ? `${data.subject}\n\n${data.body}`
+          : data.subject
+        setCommitMessage(fullMessage)
+      } else {
+        throw new Error('Invalid response from server')
+      }
+    } catch (error) {
+      setCommitError(error instanceof Error ? error.message : 'Failed to generate commit message.')
+    } finally {
+      setAutoGenerateLoading(false)
+    }
+  }
+
+  const handleStash = async () => {
+    setStashLoading(true)
+    setStashError(null)
+    try {
+      await onStash()
+      setStashConfirmOpen(false)
+    } catch (error) {
+      setStashError(error instanceof Error ? error.message : 'Failed to stash.')
+    } finally {
+      setStashLoading(false)
     }
   }
 
@@ -190,11 +250,21 @@ export function Sidebar({
           >
             Push
           </button>
+          <button
+            type="button"
+            className="sidebar-action-btn"
+            onClick={() => {
+              if (!hasChanges) return
+              setStashConfirmOpen(true)
+              setStashError(null)
+            }}
+            disabled={!hasChanges || stashLoading}
+          >
+            Stash
+          </button>
         </div>
-        <button type="button" className="sidebar-action-btn" disabled={true} title="Coming soon">
-          Review code
-        </button>
         {pushError ? <div className="sidebar-action-error">{pushError}</div> : null}
+        {stashError ? <div className="sidebar-action-error">{stashError}</div> : null}
         {commitOpen ? (
           <div className="sidebar-commit">
             <label className="sidebar-commit-label" htmlFor="sidebar-commit-message">
@@ -213,8 +283,12 @@ export function Sidebar({
               <button type="button" onClick={() => void handleCommit()} disabled={commitLoading}>
                 {commitLoading ? 'Committing…' : 'Commit'}
               </button>
-              <button type="button" disabled={true} title="Auto-generate coming soon">
-                Auto-generate
+              <button
+                type="button"
+                onClick={() => void handleAutoGenerate()}
+                disabled={autoGenerateLoading || !hasChanges}
+              >
+                {autoGenerateLoading ? 'Generating…' : 'Auto-generate'}
               </button>
               <button
                 type="button"
@@ -223,6 +297,32 @@ export function Sidebar({
                   setCommitError(null)
                 }}
                 disabled={commitLoading}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : null}
+        {stashConfirmOpen ? (
+          <div className="sidebar-commit">
+            <div className="sidebar-stash-confirm">
+              Are you sure you want to stash all changes? This will save your current changes and revert to a clean working directory.
+            </div>
+            <div className="sidebar-commit-actions">
+              <button
+                type="button"
+                onClick={() => void handleStash()}
+                disabled={stashLoading}
+              >
+                {stashLoading ? 'Stashing…' : 'Yes, Stash'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setStashConfirmOpen(false)
+                  setStashError(null)
+                }}
+                disabled={stashLoading}
               >
                 Cancel
               </button>
