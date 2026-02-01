@@ -1,25 +1,33 @@
 import chokidar from 'chokidar'
 
-import { getGitDiff } from './gitDiff'
+import { getGitDiff, getGitDiffStaged } from './gitDiff'
 
 type DiffSnapshot = {
-  patch: string
+  unstaged: string
+  staged: string
   updatedAt: string
 }
 
 let latest: DiffSnapshot = {
-  patch: '',
+  unstaged: '',
+  staged: '',
   updatedAt: new Date(0).toISOString(),
 }
+
+let currentRepoPath: string | null = null
 
 const debounceMs = 150
 let pendingTimer: NodeJS.Timeout | null = null
 
 async function refresh(repoPath: string) {
   try {
-    const patch = await getGitDiff(repoPath)
+    const [unstaged, staged] = await Promise.all([
+      getGitDiff(repoPath),
+      getGitDiffStaged(repoPath),
+    ])
     latest = {
-      patch,
+      unstaged,
+      staged,
       updatedAt: new Date().toISOString(),
     }
   } catch (error) {
@@ -38,6 +46,7 @@ function scheduleRefresh(repoPath: string) {
 }
 
 export async function startDiffWatcher(repoPath: string) {
+  currentRepoPath = repoPath
   await refresh(repoPath)
 
   const watcher = chokidar.watch(repoPath, {
@@ -53,4 +62,14 @@ export async function startDiffWatcher(repoPath: string) {
 
 export function getLatestDiff(): DiffSnapshot {
   return latest
+}
+
+export function getRepoPath(): string | null {
+  return currentRepoPath
+}
+
+export function triggerRefresh() {
+  if (currentRepoPath) {
+    void refresh(currentRepoPath)
+  }
 }

@@ -10,3 +10,23 @@ export async function getGitDiff(repoPath: string): Promise<string> {
 
   return stdout
 }
+
+export async function getGitDiffStaged(repoPath: string): Promise<string> {
+  const { stdout } = await execFileAsync('git', ['diff', '--cached', '--no-color', '--no-ext-diff'], {
+    cwd: repoPath,
+  })
+
+  return stdout
+}
+
+export async function stageFile(repoPath: string, filePath: string): Promise<void> {
+  await execFileAsync('git', ['add', '--', filePath], {
+    cwd: repoPath,
+  })
+}
+
+export async function unstageFile(repoPath: string, filePath: string): Promise<void> {
+  await execFileAsync('git', ['reset', 'HEAD', '--', filePath], {
+    cwd: repoPath,
+  })
+}
