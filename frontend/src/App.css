@@ -258,6 +258,20 @@
   min-height: 0;
 }
 
+.review-code-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  padding: 12px 0;
+}
+
+.review-code-placeholder {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
 .quiz-list {
   display: flex;
   flex-direction: column;

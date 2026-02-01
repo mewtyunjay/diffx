@@ -73,7 +73,7 @@ function App() {
   const [pendingUnstage, setPendingUnstage] = useState<Set<string>>(new Set())
   const [repoPath, setRepoPath] = useState<string | null>(null)
   const [reviewOpen, setReviewOpen] = useState(true)
-  const [reviewMode, setReviewMode] = useState<'explain' | 'quiz'>('explain')
+  const [reviewMode, setReviewMode] = useState<'explain' | 'quiz' | 'review'>('explain')
   const [reviewInput, setReviewInput] = useState('')
   const [reviewLog, setReviewLog] = useState<
     { id: number; role: 'user' | 'assistant'; content: string }[]
@@ -527,6 +527,15 @@ function App() {
                 >
                   Quiz
                 </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={reviewMode === 'review'}
+                  className={reviewMode === 'review' ? 'active' : undefined}
+                  onClick={() => setReviewMode('review')}
+                >
+                  Review
+                </button>
               </div>
               <div className="review-body">
                 {reviewMode === 'explain' && (
@@ -638,6 +647,13 @@ function App() {
                         )}
                       </>
                     )}
+                  </div>
+                )}
+                {reviewMode === 'review' && (
+                  <div className="review-code-panel">
+                    <p className="review-code-placeholder">
+                      Code review feature coming soon. This will provide AI-powered code review suggestions for your changes.
+                    </p>
                   </div>
                 )}
               </div>

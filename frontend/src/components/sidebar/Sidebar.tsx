@@ -191,9 +191,6 @@ export function Sidebar({
             Push
           </button>
         </div>
-        <button type="button" className="sidebar-action-btn" disabled={true} title="Coming soon">
-          Review code
-        </button>
         {pushError ? <div className="sidebar-action-error">{pushError}</div> : null}
         {commitOpen ? (
           <div className="sidebar-commit">
