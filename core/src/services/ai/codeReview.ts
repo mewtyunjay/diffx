@@ -1,4 +1,5 @@
 import { getCodexClient } from './codexClient'
+import { CODEX_MODELS } from './models'
 import { normalizeToText } from './normalize'
 
 export type ReviewCategory = 'bug' | 'security' | 'quality'
@@ -71,7 +72,7 @@ function parseAgentResponse(raw: unknown, category: ReviewCategory): ReviewFindi
 }
 
 async function runBugHunterAgent(diff: string, repoPath: string | null): Promise<AgentResult> {
-  const codex = getCodexClient()
+  const codex = getCodexClient(CODEX_MODELS.bugHunter)
   const thread = codex.startThread()
 
   const prompt = `You are a Bug Hunter agent. Analyze the code diff for potential bugs and issues.
@@ -100,7 +101,7 @@ ${diff}`
 }
 
 async function runSecurityAgent(diff: string, repoPath: string | null): Promise<AgentResult> {
-  const codex = getCodexClient()
+  const codex = getCodexClient(CODEX_MODELS.security)
   const thread = codex.startThread()
 
   const prompt = `You are a Security Agent. Analyze the code diff for security vulnerabilities.
@@ -132,7 +133,7 @@ ${diff}`
 }
 
 async function runQualityAgent(diff: string, repoPath: string | null): Promise<AgentResult> {
-  const codex = getCodexClient()
+  const codex = getCodexClient(CODEX_MODELS.quality)
   const thread = codex.startThread()
 
   const prompt = `You are a Code Quality Agent. Analyze the code diff for quality improvements.
@@ -167,7 +168,7 @@ async function generateSummary(findings: ReviewFinding[], repoPath: string | nul
     return 'No issues found. The code changes look good!'
   }
 
-  const codex = getCodexClient()
+  const codex = getCodexClient(CODEX_MODELS.summary)
   const thread = codex.startThread()
 
   const findingsText = findings.map((f, i) =>

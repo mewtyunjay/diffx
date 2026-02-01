@@ -1,5 +1,6 @@
 import { execSync } from 'child_process'
 import { getCodexClient } from './codexClient'
+import { CODEX_MODELS } from './models'
 import { normalizeToText } from './normalize'
 
 export type CommitMessageStyle = 'conventional' | 'descriptive' | 'simple'
@@ -61,7 +62,7 @@ export async function generateCommitMessage({
   includeBody,
   customRules,
 }: CommitMessageInput): Promise<CommitMessagePayload> {
-  const codex = getCodexClient()
+  const codex = getCodexClient(CODEX_MODELS.commitMessage)
   const thread = codex.startThread()
   const rulesBlock = customRules?.trim()
 

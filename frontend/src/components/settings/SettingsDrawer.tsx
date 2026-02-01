@@ -376,6 +376,55 @@ export function SettingsDrawer({ open, settings, onClose, onChange, onReset }: S
               <pre>{commitMessagePreview}</pre>
             </div>
           </section>
+
+          <section className="settings-section">
+            <div className="settings-section-header">
+              <h2>Code Review</h2>
+              <p>Choose which review agents to run.</p>
+            </div>
+
+            <label className="settings-checkbox">
+              <input
+                type="checkbox"
+                checked={settings.codeReview.enableBugHunter}
+                onChange={(event) =>
+                  onChange({
+                    ...settings,
+                    codeReview: { ...settings.codeReview, enableBugHunter: event.target.checked },
+                  })
+                }
+              />
+              Bug Hunter agent
+            </label>
+
+            <label className="settings-checkbox">
+              <input
+                type="checkbox"
+                checked={settings.codeReview.enableSecurity}
+                onChange={(event) =>
+                  onChange({
+                    ...settings,
+                    codeReview: { ...settings.codeReview, enableSecurity: event.target.checked },
+                  })
+                }
+              />
+              Security agent
+            </label>
+
+            <label className="settings-checkbox">
+              <input
+                type="checkbox"
+                checked={settings.codeReview.enableQuality}
+                onChange={(event) =>
+                  onChange({
+                    ...settings,
+                    codeReview: { ...settings.codeReview, enableQuality: event.target.checked },
+                  })
+                }
+              />
+              Quality agent
+            </label>
+          </section>
         </div>
       </div>
     </div>

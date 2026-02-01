@@ -29,10 +29,17 @@ export type CommitMessageSettings = {
   customRules: string
 }
 
+export type CodeReviewSettings = {
+  enableBugHunter: boolean
+  enableSecurity: boolean
+  enableQuality: boolean
+}
+
 export type Settings = {
   explain: ExplainSettings
   quiz: QuizSettings
   commitMessage: CommitMessageSettings
+  codeReview: CodeReviewSettings
 }
 
 export const defaultSettings: Settings = {
@@ -56,6 +63,11 @@ export const defaultSettings: Settings = {
     style: 'conventional',
     includeBody: true,
     customRules: '',
+  },
+  codeReview: {
+    enableBugHunter: true,
+    enableSecurity: true,
+    enableQuality: true,
   },
 }
 
@@ -91,11 +103,19 @@ function mergeCommitMessageSettings(partial?: Partial<CommitMessageSettings>): C
   }
 }
 
+function mergeCodeReviewSettings(partial?: Partial<CodeReviewSettings>): CodeReviewSettings {
+  return {
+    ...defaultSettings.codeReview,
+    ...partial,
+  }
+}
+
 export function mergeSettings(partial?: Partial<Settings>): Settings {
   return {
     explain: mergeExplainSettings(partial?.explain),
     quiz: mergeQuizSettings(partial?.quiz),
     commitMessage: mergeCommitMessageSettings(partial?.commitMessage),
+    codeReview: mergeCodeReviewSettings(partial?.codeReview),
   }
 }
 

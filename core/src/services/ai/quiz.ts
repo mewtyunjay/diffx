@@ -1,4 +1,5 @@
 import { getCodexClient } from './codexClient'
+import { CODEX_MODELS } from './models'
 import { normalizeToText } from './normalize'
 
 export type QuizQuestion = {
@@ -67,7 +68,7 @@ export async function buildQuiz({
   rules,
   includeExplanations,
 }: QuizInput): Promise<QuizPayload> {
-  const codex = getCodexClient()
+  const codex = getCodexClient(CODEX_MODELS.quiz)
   const thread = codex.startThread()
   const rulesBlock = rules?.trim()
   const includeExplanationsFlag = includeExplanations !== false

@@ -293,30 +293,39 @@
   gap: 16px;
 }
 
-.code-review-summary {
+.code-review-header {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   padding: 12px;
   background: var(--bg-tertiary);
   border-radius: 6px;
   border-left: 3px solid var(--accent-add);
 }
 
+.code-review-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .code-review-summary p {
   margin: 0;
   font-size: 0.85rem;
   line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 .code-review-stats {
   display: flex;
-  gap: 16px;
-  padding: 8px 0;
+  flex-wrap: wrap;
+  gap: 10px 14px;
 }
 
 .code-review-stats span {
   font-size: 0.8rem;
-  display: flex;
-  align-items: center;
-  gap: 4px;
+  white-space: nowrap;
 }
 
 .code-review-findings {
@@ -325,26 +334,51 @@
   gap: 12px;
 }
 
-.code-review-finding {
-  padding: 12px;
+.code-review-accordion {
   border-radius: 6px;
   background: var(--bg-tertiary);
   border-left: 3px solid var(--border-strong);
+  overflow: hidden;
 }
 
-.code-review-finding.severity-critical {
+.code-review-accordion.severity-critical {
   border-left-color: #e53935;
   background: rgba(229, 57, 53, 0.1);
 }
 
-.code-review-finding.severity-warning {
+.code-review-accordion.severity-warning {
   border-left-color: #fb8c00;
   background: rgba(251, 140, 0, 0.1);
 }
 
-.code-review-finding.severity-suggestion {
+.code-review-accordion.severity-suggestion {
   border-left-color: #43a047;
   background: rgba(67, 160, 71, 0.1);
+}
+
+.finding-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.finding-summary::-webkit-details-marker {
+  display: none;
+}
+
+.finding-badges {
+  display: inline-flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.finding-body {
+  padding: 0 12px 12px;
+  border-top: 1px solid var(--border-strong);
 }
 
 .finding-header {
@@ -402,6 +436,7 @@
   font-size: 0.8rem;
   line-height: 1.5;
   color: var(--text-secondary);
+  overflow-wrap: anywhere;
 }
 
 .finding-location {

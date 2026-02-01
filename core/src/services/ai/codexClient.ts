@@ -1,10 +1,14 @@
 import { Codex } from '@openai/codex-sdk'
 
-let codex: Codex | null = null
+const codexClients = new Map<string, Codex>()
 
-export function getCodexClient(): Codex {
-  if (!codex) {
-    codex = new Codex()
+export function getCodexClient(model?: string): Codex {
+  const key = model ?? 'default'
+  const existing = codexClients.get(key)
+  if (existing) {
+    return existing
   }
-  return codex
+  const client = model ? new Codex({ model }) : new Codex()
+  codexClients.set(key, client)
+  return client
 }

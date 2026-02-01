@@ -1,4 +1,5 @@
 import { getCodexClient } from './codexClient'
+import { CODEX_MODELS } from './models'
 import { normalizeToText } from './normalize'
 
 export type ReviewScope = 'file' | 'repo'
@@ -41,7 +42,7 @@ function parseJsonDecision(raw: unknown): ScopeDecision | null {
 }
 
 export async function decideScope(question: string): Promise<ScopeDecision> {
-  const codex = getCodexClient()
+  const codex = getCodexClient(CODEX_MODELS.explainReview)
   const thread = codex.startThread()
   const prompt = [
     'Decide whether the user question needs only the selected file diff or the full repo diff.',
@@ -79,7 +80,7 @@ export async function answerQuestion({
   fullDiff,
   styleInstructions,
 }: ReviewInput): Promise<string> {
-  const codex = getCodexClient()
+  const codex = getCodexClient(CODEX_MODELS.explainReview)
   const thread = codex.startThread()
   const context = scope === 'file' && fileDiff?.trim() ? fileDiff : fullDiff
   const scopeLabel = scope === 'file' && fileDiff?.trim() ? 'file' : 'repo'

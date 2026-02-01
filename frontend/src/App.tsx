@@ -307,9 +307,9 @@ function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           reviewConfig: {
-            enableBugHunter: true,
-            enableSecurity: true,
-            enableQuality: true,
+            enableBugHunter: settings.codeReview.enableBugHunter,
+            enableSecurity: settings.codeReview.enableSecurity,
+            enableQuality: settings.codeReview.enableQuality,
           },
         }),
       })
@@ -324,7 +324,7 @@ function App() {
     } finally {
       setCodeReviewLoading(false)
     }
-  }, [])
+  }, [settings.codeReview])
 
   useEffect(() => {
     void load()
@@ -736,44 +736,60 @@ function App() {
                     )}
                     {!codeReviewLoading && codeReviewResult && (
                       <div className="code-review-results">
-                        <div className="code-review-summary">
-                          <p>{codeReviewResult.summary}</p>
-                        </div>
-                        <div className="code-review-stats">
-                          <span className="stat-bugs" title="Bugs">
-                            🐛 {codeReviewResult.stats.bugs}
-                          </span>
-                          <span className="stat-security" title="Security">
-                            🔒 {codeReviewResult.stats.security}
-                          </span>
-                          <span className="stat-quality" title="Quality">
-                            ✨ {codeReviewResult.stats.quality}
-                          </span>
+                        <div className="code-review-header">
+                          <div className="code-review-title">Code Review</div>
+                          <div className="code-review-stats">
+                            <span className="stat-bugs" title="Bugs">
+                              Bugs: {codeReviewResult.stats.bugs}
+                            </span>
+                            <span className="stat-security" title="Security">
+                              Security: {codeReviewResult.stats.security}
+                            </span>
+                            <span className="stat-quality" title="Quality">
+                              Quality: {codeReviewResult.stats.quality}
+                            </span>
+                            <span className="stat-critical" title="Critical">
+                              Critical: {codeReviewResult.stats.critical}
+                            </span>
+                            <span className="stat-warnings" title="Warnings">
+                              Warnings: {codeReviewResult.stats.warnings}
+                            </span>
+                            <span className="stat-suggestions" title="Suggestions">
+                              Suggestions: {codeReviewResult.stats.suggestions}
+                            </span>
+                          </div>
+                          <div className="code-review-summary">
+                            <p>{codeReviewResult.summary}</p>
+                          </div>
                         </div>
                         {codeReviewResult.findings.length > 0 && (
                           <div className="code-review-findings">
                             {codeReviewResult.findings.map((finding, index) => (
-                              <div
+                              <details
                                 key={index}
-                                className={`code-review-finding severity-${finding.severity}`}
+                                className={`code-review-accordion severity-${finding.severity}`}
                               >
-                                <div className="finding-header">
-                                  <span className={`finding-badge category-${finding.category}`}>
-                                    {finding.category}
+                                <summary className="finding-summary">
+                                  <span className="finding-badges">
+                                    <span className={`finding-badge category-${finding.category}`}>
+                                      {finding.category}
+                                    </span>
+                                    <span className={`finding-badge severity-${finding.severity}`}>
+                                      {finding.severity}
+                                    </span>
                                   </span>
-                                  <span className={`finding-badge severity-${finding.severity}`}>
-                                    {finding.severity}
-                                  </span>
+                                </summary>
+                                <div className="finding-body">
+                                  <div className="finding-title">{finding.title}</div>
+                                  <div className="finding-description">{finding.description}</div>
+                                  {finding.file && (
+                                    <div className="finding-location">
+                                      📄 {finding.file}
+                                      {finding.line && `:${finding.line}`}
+                                    </div>
+                                  )}
                                 </div>
-                                <div className="finding-title">{finding.title}</div>
-                                <div className="finding-description">{finding.description}</div>
-                                {finding.file && (
-                                  <div className="finding-location">
-                                    📄 {finding.file}
-                                    {finding.line && `:${finding.line}`}
-                                  </div>
-                                )}
-                              </div>
+                              </details>
                             ))}
                           </div>
                         )}
