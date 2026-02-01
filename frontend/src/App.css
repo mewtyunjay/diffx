@@ -271,9 +271,27 @@
 }
 
 .quiz-card {
-  border: 2px solid var(--border-subtle);
-  padding: 12px;
-  background: var(--bg-panel-muted);
+  border: none;
+  padding: 12px 0;
+  background: transparent;
+  position: relative;
+}
+
+.quiz-card:not(:first-child) {
+  padding-top: 0;
+}
+
+.quiz-card:not(:last-child) {
+  padding-bottom: 0;
+}
+
+.quiz-card:not(:last-child)::after {
+  content: '';
+  display: block;
+  height: 1px;
+  width: 80%;
+  margin: 12px auto;
+  background: var(--border-subtle);
 }
 
 .quiz-question {
@@ -400,6 +418,13 @@
 .quiz-option-result.correct {
   border-left-color: var(--accent-add);
   background: rgba(52, 211, 153, 0.1);
+}
+
+.quiz-explanation {
+  margin: 8px 0 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.5;
 }
 
 .quiz-footer-actions {

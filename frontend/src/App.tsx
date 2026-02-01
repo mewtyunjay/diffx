@@ -4,7 +4,17 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { DiffToolbar } from './components/diff/DiffToolbar'
 import { DiffViewer } from './components/diff/DiffViewer'
+import { SettingsDrawer } from './components/settings/SettingsDrawer'
 import { Sidebar, type SidebarFile } from './components/sidebar/Sidebar'
+import {
+  buildExplainInstructions,
+  buildQuizRules,
+  defaultSettings,
+  loadSettings,
+  mergeSettings,
+  saveSettings,
+  type Settings,
+} from './utils/settings'
 import './App.css'
 
 type FileEntry = SidebarFile & { fileDiff: FileDiffMetadata; status: 'staged' | 'unstaged' }
@@ -70,7 +80,15 @@ function App() {
   >([])
   const [reviewLoading, setReviewLoading] = useState(false)
   const [reviewError, setReviewError] = useState<string | null>(null)
-  type QuizQuestion = { id: string; prompt: string; options: string[]; answerIndex?: number }
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [settings, setSettings] = useState<Settings>(() => loadSettings())
+  type QuizQuestion = {
+    id: string
+    prompt: string
+    options: string[]
+    answerIndex?: number
+    explanation?: string
+  }
   type QuizResult = {
     id: number
     score: number
@@ -88,6 +106,18 @@ function App() {
   const [quizSubmitted, setQuizSubmitted] = useState(false)
   const [quizView, setQuizView] = useState<'quiz' | 'results'>('quiz')
   const [quizResults, setQuizResults] = useState<QuizResult[]>([])
+
+  useEffect(() => {
+    saveSettings(settings)
+  }, [settings])
+
+  const handleSettingsChange = useCallback((next: Settings) => {
+    setSettings(mergeSettings(next))
+  }, [])
+
+  const handleSettingsReset = useCallback(() => {
+    setSettings(defaultSettings)
+  }, [])
 
   const parsedStaged = useMemo(() => parseFileDiffs(stagedPatch, 'staged'), [stagedPatch])
   const parsedUnstaged = useMemo(() => parseFileDiffs(unstagedPatch, 'unstaged'), [unstagedPatch])
@@ -180,20 +210,39 @@ function App() {
     setQuizError(null)
     setQuizSubmitted(false)
     try {
+      const quizRules = buildQuizRules(settings.quiz)
       const response = await fetch('http://localhost:3001/ai/quiz', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ count: 5 }),
+        body: JSON.stringify({
+          count: settings.quiz.questionCount,
+          quizConfig: {
+            rules: quizRules,
+            includeExplanations: settings.quiz.includeExplanations,
+          },
+        }),
       })
       if (!response.ok) {
         throw new Error(`Failed to build quiz (${response.status})`)
       }
       const data = (await response.json()) as {
-        questions?: { id?: string; prompt?: string; options?: string[]; answerIndex?: number }[]
+        questions?: {
+          id?: string
+          prompt?: string
+          options?: string[]
+          answerIndex?: number
+          explanation?: string
+        }[]
       }
       const questions =
         data.questions?.filter(
-          (question): question is { id: string; prompt: string; options: string[]; answerIndex?: number } =>
+          (question): question is {
+            id: string
+            prompt: string
+            options: string[]
+            answerIndex?: number
+            explanation?: string
+          } =>
             typeof question.id === 'string' &&
             typeof question.prompt === 'string' &&
             Array.isArray(question.options)
@@ -210,7 +259,7 @@ function App() {
     } finally {
       setQuizLoading(false)
     }
-  }, [])
+  }, [settings.quiz])
 
   const loadQuizResults = useCallback(async () => {
     try {
@@ -287,12 +336,17 @@ function App() {
     setReviewLog((prev) => [...prev, { id: Date.now(), role: 'user', content: question }])
 
     try {
+      const instructions = buildExplainInstructions(settings.explain)
       const response = await fetch('http://localhost:3001/ai/review', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           question,
           filePath: selectedPath,
+          reviewConfig: {
+            scopePreference: settings.explain.scopePreference,
+            instructions,
+          },
         }),
       })
 
@@ -308,7 +362,7 @@ function App() {
     } finally {
       setReviewLoading(false)
     }
-  }, [reviewInput, reviewLoading, selectedPath])
+  }, [reviewInput, reviewLoading, selectedPath, settings.explain])
 
   const handleQuizSelect = useCallback((questionId: string, optionIndex: number) => {
     setQuizAnswers((prev) => ({ ...prev, [questionId]: optionIndex }))
@@ -353,6 +407,7 @@ function App() {
         onSelectFile={(path) => setSelectedPath(path)}
         onStageFile={handleStageFile}
         onUnstageFile={handleUnstageFile}
+        onOpenSettings={() => setSettingsOpen(true)}
       />
       <main className="main">
         <div className={`workspace ${reviewOpen ? 'review-open' : 'review-closed'}`}>
@@ -480,6 +535,9 @@ function App() {
                                             )
                                           })}
                                         </div>
+                                        {question.explanation ? (
+                                          <p className="quiz-explanation">{question.explanation}</p>
+                                        ) : null}
                                       </div>
                                     )
                                   })}
@@ -531,12 +589,18 @@ function App() {
                       <button type="button" onClick={fetchQuiz} disabled={quizLoading}>
                         Generate quiz
                       </button>
-                      <button
-                        type="button"
-                        className="quiz-results-toggle"
-                        onClick={() => setQuizView('results')}
-                      >
+                      <button type="button" onClick={() => setQuizView('results')}>
                         Past results
+                      </button>
+                    </div>
+                  )}
+                  {quizView === 'results' && (
+                    <div className="quiz-generate-row">
+                      <button type="button" onClick={fetchQuiz} disabled={quizLoading}>
+                        Generate quiz
+                      </button>
+                      <button type="button" onClick={() => setQuizView('quiz')}>
+                        Back to quiz
                       </button>
                     </div>
                   )}
@@ -588,6 +652,13 @@ function App() {
           </aside>
         </div>
       </main>
+      <SettingsDrawer
+        open={settingsOpen}
+        settings={settings}
+        onClose={() => setSettingsOpen(false)}
+        onChange={handleSettingsChange}
+        onReset={handleSettingsReset}
+      />
     </div>
   )
 }

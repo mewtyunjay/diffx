@@ -6,6 +6,7 @@ type QuizQuestion = {
   prompt: string
   options: string[]
   answerIndex?: number
+  explanation?: string
 }
 
 export type QuizResult = {

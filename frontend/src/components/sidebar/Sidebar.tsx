@@ -16,6 +16,7 @@ type SidebarProps = {
   onSelectFile: (path: string) => void
   onStageFile: (filePath: string) => void
   onUnstageFile: (filePath: string) => void
+  onOpenSettings: () => void
 }
 
 export function Sidebar({
@@ -26,6 +27,7 @@ export function Sidebar({
   onSelectFile,
   onStageFile,
   onUnstageFile,
+  onOpenSettings,
 }: SidebarProps) {
   const totalFiles = stagedFiles.length + unstagedFiles.length
 
@@ -123,6 +125,11 @@ export function Sidebar({
             </Accordion>
           </>
         )}
+      </div>
+      <div className="sidebar-footer">
+        <button type="button" className="sidebar-settings" onClick={onOpenSettings}>
+          Settings
+        </button>
       </div>
     </aside>
   )

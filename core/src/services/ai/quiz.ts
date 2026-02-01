@@ -56,18 +56,32 @@ type QuizInput = {
   repoPath: string | null
   fullDiff: string
   questionCount: number
+  rules?: string | null
+  includeExplanations?: boolean
 }
 
-export async function buildQuiz({ repoPath, fullDiff, questionCount }: QuizInput): Promise<QuizPayload> {
+export async function buildQuiz({
+  repoPath,
+  fullDiff,
+  questionCount,
+  rules,
+  includeExplanations,
+}: QuizInput): Promise<QuizPayload> {
   const codex = getCodexClient()
   const thread = codex.startThread()
+  const rulesBlock = rules?.trim()
+  const includeExplanationsFlag = includeExplanations !== false
+  const schema = includeExplanationsFlag
+    ? '{"questions":[{"id":"q1","prompt":"...", "options":["A","B","C","D"], "answerIndex":0, "explanation":"..."}]}'
+    : '{"questions":[{"id":"q1","prompt":"...", "options":["A","B","C","D"], "answerIndex":0}]}'
   const prompt = [
     'You are DiffX. Create a comprehension quiz about the code changes.',
     'Use ONLY the provided diff context.',
     'Return ONLY JSON with shape:',
-    '{"questions":[{"id":"q1","prompt":"...", "options":["A","B","C","D"], "answerIndex":0, "explanation":"..."}]}',
+    schema,
     `Number of questions: ${questionCount}`,
     `Repository: ${repoPath ?? 'unknown'}`,
+    ...(rulesBlock ? ['--- RULES ---', rulesBlock] : []),
     '--- CONTEXT ---',
     fullDiff,
   ].join('\n')

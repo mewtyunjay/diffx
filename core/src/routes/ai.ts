@@ -17,6 +17,11 @@ aiRouter.post('/ai/review', async (req, res) => {
 
   const question = typeof req.body?.question === 'string' ? req.body.question.trim() : ''
   const filePath = typeof req.body?.filePath === 'string' ? req.body.filePath.trim() : null
+  const reviewConfig = req.body?.reviewConfig
+  const scopePreference =
+    typeof reviewConfig?.scopePreference === 'string' ? reviewConfig.scopePreference : null
+  const styleInstructions =
+    typeof reviewConfig?.instructions === 'string' ? reviewConfig.instructions.trim() : null
 
   if (!question) {
     res.status(400).json({ error: 'Question is required' })
@@ -29,7 +34,10 @@ aiRouter.post('/ai/review', async (req, res) => {
   const fileDiff = filePath ? extractFileDiff(`${latest.unstaged}\n${latest.staged}`, filePath) : null
 
   try {
-    const decision = await decideScope(question)
+    const decision =
+      scopePreference === 'file' || scopePreference === 'repo'
+        ? { scope: scopePreference, reason: 'User preference' }
+        : await decideScope(question)
     const answer = await answerQuestion({
       question,
       scope: decision.scope,
@@ -37,6 +45,7 @@ aiRouter.post('/ai/review', async (req, res) => {
       filePath,
       fileDiff,
       fullDiff,
+      styleInstructions,
     })
 
     res.json({
@@ -58,12 +67,16 @@ aiRouter.post('/ai/quiz', async (req, res) => {
 
   const count = Number(req.body?.count)
   const questionCount = Number.isFinite(count) && count > 0 && count <= 10 ? Math.floor(count) : 5
+  const quizConfig = req.body?.quizConfig
+  const rules = typeof quizConfig?.rules === 'string' ? quizConfig.rules.trim() : null
+  const includeExplanations =
+    typeof quizConfig?.includeExplanations === 'boolean' ? quizConfig.includeExplanations : undefined
   const repoPath = getRepoPath()
   const latest = getLatestDiff()
   const fullDiff = buildCombinedDiff(latest)
 
   try {
-    const quiz = await buildQuiz({ repoPath, fullDiff, questionCount })
+    const quiz = await buildQuiz({ repoPath, fullDiff, questionCount, rules, includeExplanations })
     res.json(quiz)
   } catch (error) {
     console.error('AI quiz failed:', error)

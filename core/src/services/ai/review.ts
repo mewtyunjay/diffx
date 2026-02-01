@@ -67,6 +67,7 @@ type ReviewInput = {
   filePath?: string | null
   fileDiff?: string | null
   fullDiff: string
+  styleInstructions?: string | null
 }
 
 export async function answerQuestion({
@@ -76,11 +77,13 @@ export async function answerQuestion({
   filePath,
   fileDiff,
   fullDiff,
+  styleInstructions,
 }: ReviewInput): Promise<string> {
   const codex = getCodexClient()
   const thread = codex.startThread()
   const context = scope === 'file' && fileDiff?.trim() ? fileDiff : fullDiff
   const scopeLabel = scope === 'file' && fileDiff?.trim() ? 'file' : 'repo'
+  const styleBlock = styleInstructions?.trim()
 
   const prompt = [
     'You are DiffX, a supervisor reviewing code changes.',
@@ -89,6 +92,7 @@ export async function answerQuestion({
     `Repository: ${repoPath ?? 'unknown'}`,
     `Scope: ${scopeLabel}`,
     `Selected file: ${filePath ?? 'none'}`,
+    ...(styleBlock ? ['--- STYLE ---', styleBlock] : []),
     '--- CONTEXT ---',
     context,
     '--- QUESTION ---',
