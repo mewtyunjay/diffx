@@ -1,9 +1,9 @@
 .diff-viewer {
-  width: min(1100px, 100%);
-  padding: 24px;
-  border-radius: 18px;
-  background: #ffffff;
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+  width: 100%;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
   overflow: hidden;
 }
 
@@ -12,67 +12,23 @@ diffs-container {
 }
 
 .diff-empty {
-  padding: 40px 20px;
-  text-align: center;
-  color: #475569;
+  padding: 32px 20px;
+  text-align: left;
+  color: var(--text-muted);
   font-weight: 500;
+  border: 2px dashed var(--border-subtle);
+  background: var(--bg-panel-muted);
 }
 
 .diffs-list {
   display: grid;
-  gap: 24px;
+  gap: 16px;
 }
 
 .diff-card {
-  border: 1px solid #e2e8f0;
-  border-radius: 16px;
+  border: 2px solid var(--border-strong);
+  border-radius: 0;
   overflow: hidden;
-  background: #ffffff;
-  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
-}
-
-.diff-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 14px 18px;
-  border-bottom: 1px solid #e2e8f0;
-  background: linear-gradient(120deg, #f8fafc 0%, #eef2ff 100%);
-}
-
-.diff-filename {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #0f172a;
-  word-break: break-word;
-}
-
-.diff-controls {
-  display: inline-flex;
-  padding: 4px;
-  border-radius: 999px;
-  background: #e2e8f0;
-  gap: 4px;
-}
-
-.diff-toggle {
-  border: none;
-  background: transparent;
-  padding: 6px 14px;
-  border-radius: 999px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #475569;
-  cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
-}
-
-.diff-toggle:hover {
-  transform: translateY(-1px);
-}
-
-.diff-toggle.is-active {
-  background: #0f172a;
-  color: #f8fafc;
+  background: #0d0f14;
+  color: #e5e7eb;
 }

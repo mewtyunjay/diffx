@@ -1,14 +1,31 @@
 import { parsePatchFiles, type FileDiffMetadata } from '@pierre/diffs'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Chatbox } from './components/chat/Chatbox'
-import { ModeToggle, type Mode } from './components/chat/ModeToggle'
+import { DiffToolbar } from './components/diff/DiffToolbar'
 import { DiffViewer } from './components/diff/DiffViewer'
 import { Sidebar, type SidebarFile } from './components/sidebar/Sidebar'
 import './App.css'
 
-type FileWithDiff = SidebarFile & { fileDiff: FileDiffMetadata }
+type FileEntry = SidebarFile & { fileDiff: FileDiffMetadata; status: 'staged' | 'unstaged' }
 
-function parseFileDiffs(patchText: string, prefix: string): FileWithDiff[] {
+function insertByPath(base: FileEntry[], moved: FileEntry[]): FileEntry[] {
+  if (moved.length === 0) return base
+  const ordered = [...base]
+  const movedSorted = [...moved].sort((a, b) => a.path.localeCompare(b.path))
+  movedSorted.forEach((file) => {
+    const insertIndex = ordered.findIndex((entry) => entry.path.localeCompare(file.path) > 0)
+    if (insertIndex === -1) {
+      ordered.push(file)
+    } else {
+      ordered.splice(insertIndex, 0, file)
+    }
+  })
+  return ordered
+}
+
+function parseFileDiffs(
+  patchText: string,
+  status: 'staged' | 'unstaged'
+): FileEntry[] {
   if (!patchText.trim()) return []
   const parsed = parsePatchFiles(patchText)
   const parsedFiles = parsed.flatMap((entry) => entry.files ?? [])
@@ -22,40 +39,66 @@ function parseFileDiffs(patchText: string, prefix: string): FileWithDiff[] {
       0
     )
     const name = fileDiff.name || fileDiff.prevName || 'Untitled'
+    const key = `${status}:${name}:${index}`
     return {
-      key: `${prefix}-${name}-${index}`,
-      name,
+      key,
+      path: name,
       additions,
       deletions,
       fileDiff,
+      status,
     }
   })
 }
 
 function App() {
-  const [isCollapsed, setIsCollapsed] = useState(false)
   const [unstagedPatch, setUnstagedPatch] = useState('')
   const [stagedPatch, setStagedPatch] = useState('')
   const [error, setError] = useState<string | null>(null)
-  const [selectedKey, setSelectedKey] = useState<string | null>(null)
-  const [mode, setMode] = useState<Mode>('learn')
+  const [selectedPath, setSelectedPath] = useState<string | null>(null)
+  const [diffMode, setDiffMode] = useState<'unified' | 'split'>('split')
+  const [pendingStage, setPendingStage] = useState<Set<string>>(new Set())
+  const [pendingUnstage, setPendingUnstage] = useState<Set<string>>(new Set())
 
-  const stagedFiles = useMemo(() => parseFileDiffs(stagedPatch, 'staged'), [stagedPatch])
-  const unstagedFiles = useMemo(() => parseFileDiffs(unstagedPatch, 'unstaged'), [unstagedPatch])
-  const allFiles = useMemo(() => [...stagedFiles, ...unstagedFiles], [stagedFiles, unstagedFiles])
+  const parsedStaged = useMemo(() => parseFileDiffs(stagedPatch, 'staged'), [stagedPatch])
+  const parsedUnstaged = useMemo(() => parseFileDiffs(unstagedPatch, 'unstaged'), [unstagedPatch])
+  const hasChanges = parsedStaged.length + parsedUnstaged.length > 0
+
+  const stagedFiles = useMemo(() => {
+    const base = parsedStaged.filter((file) => !pendingUnstage.has(file.path))
+    const moved = parsedUnstaged
+      .filter((file) => pendingStage.has(file.path))
+      .map((file) => ({ ...file, key: `staged:${file.path}:pending` }))
+    return insertByPath(base, moved).map((file) => ({
+      key: file.key,
+      path: file.path,
+      additions: file.additions,
+      deletions: file.deletions,
+    }))
+  }, [parsedStaged, parsedUnstaged, pendingStage, pendingUnstage])
+
+  const unstagedFiles = useMemo(() => {
+    const base = parsedUnstaged.filter((file) => !pendingStage.has(file.path))
+    const moved = parsedStaged
+      .filter((file) => pendingUnstage.has(file.path))
+      .map((file) => ({ ...file, key: `unstaged:${file.path}:pending` }))
+    return insertByPath(base, moved).map((file) => ({
+      key: file.key,
+      path: file.path,
+      additions: file.additions,
+      deletions: file.deletions,
+    }))
+  }, [parsedStaged, parsedUnstaged, pendingStage, pendingUnstage])
+
+  const allFiles = useMemo(() => [...parsedStaged, ...parsedUnstaged], [parsedStaged, parsedUnstaged])
 
   const selectedFile = useMemo(() => {
-    if (!selectedKey) return null
-    return allFiles.find((file) => file.key === selectedKey) ?? null
-  }, [selectedKey, allFiles])
+    if (!selectedPath) return null
+    return allFiles.find((file) => file.path === selectedPath) ?? null
+  }, [selectedPath, allFiles])
 
-  const combinedPatch = useMemo(() => {
-    return [stagedPatch, unstagedPatch].filter(Boolean).join('\n')
-  }, [stagedPatch, unstagedPatch])
-
-  const allFileDiffs = useMemo(() => {
-    return allFiles.map((f) => f.fileDiff)
-  }, [allFiles])
+  const selectedFilename =
+    selectedFile?.fileDiff.name || selectedFile?.fileDiff.prevName || selectedFile?.path || null
 
   const load = useCallback(async () => {
     try {
@@ -74,6 +117,16 @@ function App() {
       const stagedParsed = parseFileDiffs(staged, 'staged')
       const unstagedParsed = parseFileDiffs(unstaged, 'unstaged')
       const allParsed = [...stagedParsed, ...unstagedParsed]
+      const allPaths = new Set(allParsed.map((file) => file.path))
+
+      setPendingStage((prev) => {
+        const next = new Set([...prev].filter((path) => allPaths.has(path)))
+        return next.size === prev.size ? prev : next
+      })
+      setPendingUnstage((prev) => {
+        const next = new Set([...prev].filter((path) => allPaths.has(path)))
+        return next.size === prev.size ? prev : next
+      })
 
       if (hasContent && allParsed.length === 0) {
         setError('Diff loaded but could not be parsed.')
@@ -81,14 +134,12 @@ function App() {
         setError(null)
       }
 
-      setSelectedKey((prev) => {
-        if (prev && allParsed.some((f) => f.key === prev)) {
-          return prev
+      setSelectedPath((prev) => {
+        if (!prev) {
+          return allParsed.length > 0 ? allParsed[0].path : null
         }
-        if (allParsed.length === 0) {
-          return null
-        }
-        return allParsed[0].key
+        const stillExists = allParsed.some((f) => f.path === prev)
+        return stillExists ? prev : (allParsed.length > 0 ? allParsed[0].path : null)
       })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load diff')
@@ -101,62 +152,58 @@ function App() {
     return () => window.clearInterval(interval)
   }, [load])
 
-  const handleStageFile = useCallback(async (fileName: string) => {
-    try {
-      const response = await fetch('http://localhost:3001/git/stage', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filePath: fileName }),
-      })
-      if (!response.ok) {
-        throw new Error('Failed to stage file')
-      }
-      void load()
-    } catch (err) {
-      console.error('Failed to stage file:', err)
-    }
-  }, [load])
+  const handleStageFile = useCallback((filePath: string) => {
+    setPendingStage((prev) => new Set(prev).add(filePath))
+    setPendingUnstage((prev) => {
+      const next = new Set(prev)
+      next.delete(filePath)
+      return next
+    })
+    fetch('http://localhost:3001/git/stage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filePath }),
+    }).catch((err) => console.error('Failed to stage file:', err))
+  }, [])
 
-  const handleUnstageFile = useCallback(async (fileName: string) => {
-    try {
-      const response = await fetch('http://localhost:3001/git/unstage', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filePath: fileName }),
-      })
-      if (!response.ok) {
-        throw new Error('Failed to unstage file')
-      }
-      void load()
-    } catch (err) {
-      console.error('Failed to unstage file:', err)
-    }
-  }, [load])
+  const handleUnstageFile = useCallback((filePath: string) => {
+    setPendingUnstage((prev) => new Set(prev).add(filePath))
+    setPendingStage((prev) => {
+      const next = new Set(prev)
+      next.delete(filePath)
+      return next
+    })
+    fetch('http://localhost:3001/git/unstage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filePath }),
+    }).catch((err) => console.error('Failed to unstage file:', err))
+  }, [])
 
   return (
-    <div className={`app ${isCollapsed ? 'is-collapsed' : ''}`}>
+    <div className="app">
       <Sidebar
-        collapsed={isCollapsed}
         stagedFiles={stagedFiles}
         unstagedFiles={unstagedFiles}
-        selectedKey={selectedKey}
-        onSelectFile={(key) => setSelectedKey(key)}
+        selectedPath={selectedPath}
+        onSelectFile={(path) => setSelectedPath(path)}
         onStageFile={handleStageFile}
         onUnstageFile={handleUnstageFile}
-        onToggle={() => setIsCollapsed((prev) => !prev)}
       />
       <main className="main">
+        <DiffToolbar
+          fileName={selectedFilename}
+          diffMode={diffMode}
+          onDiffModeChange={setDiffMode}
+          hasSelection={selectedFile != null}
+        />
         <div className="main-content">
           <DiffViewer
-            patch={combinedPatch}
             error={error}
-            fileDiffs={allFileDiffs}
+            hasChanges={hasChanges}
             selectedFile={selectedFile?.fileDiff ?? null}
+            diffMode={diffMode}
           />
-        </div>
-        <div className="main-chat">
-          <Chatbox />
-          <ModeToggle mode={mode} onModeChange={setMode} />
         </div>
       </main>
     </div>

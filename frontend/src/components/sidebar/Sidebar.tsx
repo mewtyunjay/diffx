@@ -3,44 +3,33 @@ import './Sidebar.css'
 
 export type SidebarFile = {
   key: string
-  name: string
+  path: string
   additions: number
   deletions: number
 }
 
 type SidebarProps = {
-  collapsed: boolean
   stagedFiles: SidebarFile[]
   unstagedFiles: SidebarFile[]
-  selectedKey: string | null
-  onSelectFile: (key: string) => void
-  onStageFile: (fileName: string) => void
-  onUnstageFile: (fileName: string) => void
-  onToggle: () => void
+  selectedPath: string | null
+  onSelectFile: (path: string) => void
+  onStageFile: (filePath: string) => void
+  onUnstageFile: (filePath: string) => void
 }
 
 export function Sidebar({
-  collapsed,
   stagedFiles,
   unstagedFiles,
-  selectedKey,
+  selectedPath,
   onSelectFile,
   onStageFile,
   onUnstageFile,
-  onToggle,
 }: SidebarProps) {
   const totalFiles = stagedFiles.length + unstagedFiles.length
 
   return (
-    <aside className="sidebar" data-collapsed={collapsed} aria-hidden={collapsed}>
+    <aside className="sidebar">
       <div className="sidebar-header">
-        <button
-          className="collapse-toggle"
-          onClick={onToggle}
-          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        >
-          {collapsed ? '»' : '«'}
-        </button>
         <div className="sidebar-title">Files</div>
       </div>
       <div className="sidebar-content">
@@ -55,30 +44,35 @@ export function Sidebar({
                 stagedFiles.map((file) => (
                   <div
                     key={file.key}
-                    className={`file-card ${file.key === selectedKey ? 'is-active' : ''}`}
+                    className={`file-card ${file.path === selectedPath ? 'is-active' : ''}`}
                   >
                     <button
                       type="button"
                       className="file-card-main"
-                      onClick={() => onSelectFile(file.key)}
+                      onClick={() => onSelectFile(file.path)}
                     >
-                      <div className="file-name">{file.name}</div>
-                      <div className="file-stats">
-                        <span className="file-add">+{file.additions}</span>
-                        <span className="file-del">-{file.deletions}</span>
+                      <div className="file-row">
+                        <div className="file-name">{file.path}</div>
+                        <div className="file-stats">
+                          <span className="file-add">+{file.additions}</span>
+                          <span className="file-del">-{file.deletions}</span>
+                        </div>
                       </div>
                     </button>
-                    <button
-                      type="button"
-                      className="file-action file-action-unstage"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onUnstageFile(file.name)
-                      }}
-                      title="Unstage file"
-                    >
-                      −
-                    </button>
+                    <div className="file-actions">
+                      <button
+                        type="button"
+                        className="file-action"
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          onUnstageFile(file.path)
+                        }}
+                        aria-label="Unstage file"
+                        title="Unstage file"
+                      >
+                        −
+                      </button>
+                    </div>
                   </div>
                 ))
               )}
@@ -91,30 +85,35 @@ export function Sidebar({
                 unstagedFiles.map((file) => (
                   <div
                     key={file.key}
-                    className={`file-card ${file.key === selectedKey ? 'is-active' : ''}`}
+                    className={`file-card ${file.path === selectedPath ? 'is-active' : ''}`}
                   >
                     <button
                       type="button"
                       className="file-card-main"
-                      onClick={() => onSelectFile(file.key)}
+                      onClick={() => onSelectFile(file.path)}
                     >
-                      <div className="file-name">{file.name}</div>
-                      <div className="file-stats">
-                        <span className="file-add">+{file.additions}</span>
-                        <span className="file-del">-{file.deletions}</span>
+                      <div className="file-row">
+                        <div className="file-name">{file.path}</div>
+                        <div className="file-stats">
+                          <span className="file-add">+{file.additions}</span>
+                          <span className="file-del">-{file.deletions}</span>
+                        </div>
                       </div>
                     </button>
-                    <button
-                      type="button"
-                      className="file-action file-action-stage"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onStageFile(file.name)
-                      }}
-                      title="Stage file"
-                    >
-                      +
-                    </button>
+                    <div className="file-actions">
+                      <button
+                        type="button"
+                        className="file-action"
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          onStageFile(file.path)
+                        }}
+                        aria-label="Stage file"
+                        title="Stage file"
+                      >
+                        +
+                      </button>
+                    </div>
                   </div>
                 ))
               )}
