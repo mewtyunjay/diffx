@@ -71,7 +71,7 @@
   font-size: 0.7rem;
   cursor: pointer;
   width: 100%;
-  text-align: left;
+  text-align: center;
 }
 
 .sidebar-action-btn:disabled {

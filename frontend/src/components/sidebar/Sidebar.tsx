@@ -260,7 +260,7 @@ export function Sidebar({
             }}
             disabled={!hasChanges || stashLoading}
           >
-            Stash All
+            Stash
           </button>
         </div>
         {pushError ? <div className="sidebar-action-error">{pushError}</div> : null}

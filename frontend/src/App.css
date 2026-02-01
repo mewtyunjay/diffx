@@ -118,22 +118,36 @@
 }
 
 .review-tabs {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 6px;
+  display: inline-flex;
+  width: 100%;
+  gap: 0;
   margin-bottom: 16px;
 }
 
 .review-tabs button {
   border: 2px solid var(--border-subtle);
-  background: transparent;
+  background: var(--bg-panel);
   color: var(--text-primary);
-  padding: 8px 6px;
+  padding: 8px 12px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-weight: 600;
   cursor: pointer;
   font-size: 0.75rem;
+  flex: 1;
+  border-radius: 0;
+}
+
+.review-tabs button + button {
+  margin-left: -2px;
+}
+
+.review-tabs button:first-child {
+  border-radius: 0;
+}
+
+.review-tabs button:last-child {
+  border-radius: 0;
 }
 
 .review-tabs button.active {
