@@ -10,9 +10,11 @@ dotenv.config({ path: path.join(rootDir, '.env') })
 const port = Number(process.env.PORT ?? 3001)
 const diffRepoPath = process.env.DIFF_REPO_PATH ?? null
 const corsOrigin = process.env.CORS_ORIGIN ?? 'http://localhost:5173'
+const openaiApiKey = process.env.OPENAI_API_KEY ?? null
 
 export const env = {
   port,
   diffRepoPath,
   corsOrigin,
+  openaiApiKey,
 } as const

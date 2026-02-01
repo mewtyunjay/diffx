@@ -1,5 +1,7 @@
 import { parsePatchFiles, type FileDiffMetadata } from '@pierre/diffs'
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { DiffToolbar } from './components/diff/DiffToolbar'
 import { DiffViewer } from './components/diff/DiffViewer'
 import { Sidebar, type SidebarFile } from './components/sidebar/Sidebar'
@@ -61,7 +63,13 @@ function App() {
   const [pendingUnstage, setPendingUnstage] = useState<Set<string>>(new Set())
   const [repoPath, setRepoPath] = useState<string | null>(null)
   const [reviewOpen, setReviewOpen] = useState(true)
-  const [reviewMode, setReviewMode] = useState<'auto' | 'explain' | 'quiz'>('auto')
+  const [reviewMode, setReviewMode] = useState<'explain' | 'quiz'>('explain')
+  const [reviewInput, setReviewInput] = useState('')
+  const [reviewLog, setReviewLog] = useState<
+    { id: number; role: 'user' | 'assistant'; content: string }[]
+  >([])
+  const [reviewLoading, setReviewLoading] = useState(false)
+  const [reviewError, setReviewError] = useState<string | null>(null)
 
   const parsedStaged = useMemo(() => parseFileDiffs(stagedPatch, 'staged'), [stagedPatch])
   const parsedUnstaged = useMemo(() => parseFileDiffs(unstagedPatch, 'unstaged'), [unstagedPatch])
@@ -197,6 +205,39 @@ function App() {
     }).catch((err) => console.error('Failed to unstage file:', err))
   }, [])
 
+  const handleReviewSubmit = useCallback(async () => {
+    const question = reviewInput.trim()
+    if (!question || reviewLoading) return
+
+    setReviewInput('')
+    setReviewError(null)
+    setReviewLoading(true)
+    setReviewLog((prev) => [...prev, { id: Date.now(), role: 'user', content: question }])
+
+    try {
+      const response = await fetch('http://localhost:3001/ai/review', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          question,
+          filePath: selectedPath,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`AI request failed (${response.status})`)
+      }
+
+      const data = (await response.json()) as { answer?: string }
+      const answer = data.answer ?? 'No response.'
+      setReviewLog((prev) => [...prev, { id: Date.now() + 1, role: 'assistant', content: answer }])
+    } catch (err) {
+      setReviewError(err instanceof Error ? err.message : 'AI request failed')
+    } finally {
+      setReviewLoading(false)
+    }
+  }, [reviewInput, reviewLoading, selectedPath])
+
   return (
     <div className="app">
       <Sidebar
@@ -230,20 +271,19 @@ function App() {
             <section className="review-panel" aria-hidden={!reviewOpen}>
               <div className="review-header">
                 <span>Review</span>
-                <button type="button" onClick={() => setReviewOpen(false)}>
-                  Close
+                <button
+                  type="button"
+                  className="review-clear"
+                  onClick={() => {
+                    setReviewLog([])
+                    setReviewError(null)
+                    setReviewInput('')
+                  }}
+                >
+                  Clear
                 </button>
               </div>
               <div className="review-tabs" role="tablist" aria-label="Review modes">
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={reviewMode === 'auto'}
-                  className={reviewMode === 'auto' ? 'active' : undefined}
-                  onClick={() => setReviewMode('auto')}
-                >
-                  Auto
-                </button>
                 <button
                   type="button"
                   role="tab"
@@ -264,16 +304,47 @@ function App() {
                 </button>
               </div>
               <div className="review-body">
-                {reviewMode === 'auto' && (
-                  <p>Auto mode will summarize the current diff and flag risky changes.</p>
-                )}
                 {reviewMode === 'explain' && (
-                  <p>Ask questions about the diff and get line-aware explanations.</p>
+                  <div className="review-log">
+                    {reviewLog.length === 0 ? (
+                      <p>Ask questions about the current diff or the whole commit.</p>
+                    ) : (
+                      reviewLog.map((entry) => (
+                        <div key={entry.id} className={`review-msg ${entry.role}`}>
+                          <span>{entry.role === 'user' ? 'You' : 'DiffX'}</span>
+                          <div className="review-markdown">
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{entry.content}</ReactMarkdown>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                    {reviewLoading && <p className="review-status">Thinking…</p>}
+                    {reviewError && <p className="review-error">{reviewError}</p>}
+                  </div>
                 )}
                 {reviewMode === 'quiz' && (
                   <p>Answer a short quiz about the change before committing.</p>
                 )}
               </div>
+              {reviewMode === 'explain' && (
+                <div className="review-chat">
+                  <input
+                    type="text"
+                    placeholder="Ask about these changes"
+                    aria-label="Ask about these changes"
+                    value={reviewInput}
+                    onChange={(event) => setReviewInput(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') {
+                        void handleReviewSubmit()
+                      }
+                    }}
+                  />
+                  <button type="button" onClick={() => void handleReviewSubmit()}>
+                    Send
+                  </button>
+                </div>
+              )}
             </section>
             <button
               type="button"

@@ -9,6 +9,9 @@
 ## Architecture Overview
 - `core` computes diffs and serves them over HTTP (Express on `:3001`).
 - `frontend` renders diffs with `@pierre/diffs` and consumes `core` via fetch.
+ - Review panel modes:
+   - Explain: general chat that knows the open diff and can answer about the whole commit too.
+   - Quiz: evaluates the entire change set (not just the currently open diff).
 
 ## Build, Test, and Development Commands
 - Use Bun for all installs and scripts (do not use npm/yarn/pnpm).

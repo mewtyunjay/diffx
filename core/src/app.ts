@@ -6,6 +6,7 @@ import { diffsRouter } from './routes/diffs'
 import { gitRouter } from './routes/git'
 import { healthRouter } from './routes/health'
 import { repoRouter } from './routes/repo'
+import { aiRouter } from './routes/ai'
 
 export function createApp() {
   const app = express()
@@ -17,6 +18,7 @@ export function createApp() {
   app.use(diffsRouter)
   app.use(repoRouter)
   app.use(gitRouter)
+  app.use(aiRouter)
 
   return app
 }
