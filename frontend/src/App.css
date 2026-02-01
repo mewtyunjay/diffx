@@ -10,10 +10,17 @@
   display: flex;
   flex-direction: column;
   padding: 20px 22px 24px;
-  gap: 16px;
   background: transparent;
   overflow: hidden;
   min-height: 0;
+}
+
+.workspace {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: stretch;
 }
 
 .diff-panel {
@@ -24,6 +31,7 @@
   border: 2px solid var(--border-strong);
   background: var(--bg-panel);
   overflow: hidden;
+  margin-right: 10px;
 }
 
 .main-content {
@@ -33,6 +41,118 @@
   justify-content: flex-start;
   min-height: 0;
   overflow: hidden;
+}
+
+.review-drawer {
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+  min-height: 0;
+}
+
+.review-panel {
+  width: 360px;
+  background: var(--bg-panel);
+  border-left: 2px solid var(--border-strong);
+  border-top: 2px solid var(--border-strong);
+  border-bottom: 2px solid var(--border-strong);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  transition: width 0.18s ease;
+}
+
+.review-open .review-panel {
+  width: 360px;
+  padding: 18px;
+}
+
+.review-closed .review-panel {
+  width: 0;
+  padding: 0;
+  border-left: 0;
+}
+
+.review-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.review-header button {
+  border: 2px solid var(--border-strong);
+  background: var(--bg-panel-muted);
+  color: var(--text-inverse);
+  padding: 6px 10px;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+}
+
+.review-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.review-tabs button {
+  border: 2px solid var(--border-subtle);
+  background: transparent;
+  color: var(--text-primary);
+  padding: 8px 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.75rem;
+}
+
+.review-tabs button.active {
+  border-color: var(--border-strong);
+  background: var(--bg-panel-muted);
+  color: var(--text-inverse);
+}
+
+.review-body {
+  flex: 1;
+  border: 2px solid var(--border-subtle);
+  padding: 12px;
+  line-height: 1.6;
+  color: var(--text-muted);
+  text-transform: none;
+  overflow: auto;
+}
+
+.review-body p {
+  margin: 0;
+}
+
+.review-rail {
+  width: 60px;
+  border-left: 2px solid var(--border-strong);
+  border-right: 2px solid var(--border-strong);
+  border-top: 2px solid var(--border-strong);
+  border-bottom: 2px solid var(--border-strong);
+  background: var(--bg-panel);
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-weight: 600;
+  cursor: pointer;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: none;
+  padding: 12px 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 @media (max-width: 720px) {

@@ -12,6 +12,7 @@ type SidebarProps = {
   stagedFiles: SidebarFile[]
   unstagedFiles: SidebarFile[]
   selectedPath: string | null
+  repoPath: string | null
   onSelectFile: (path: string) => void
   onStageFile: (filePath: string) => void
   onUnstageFile: (filePath: string) => void
@@ -21,6 +22,7 @@ export function Sidebar({
   stagedFiles,
   unstagedFiles,
   selectedPath,
+  repoPath,
   onSelectFile,
   onStageFile,
   onUnstageFile,
@@ -30,8 +32,9 @@ export function Sidebar({
   return (
     <aside className="sidebar">
       <div className="sidebar-header">
-        <div className="sidebar-title">Files</div>
+        <div className="sidebar-title">DIFFX</div>
       </div>
+      {repoPath ? <div className="sidebar-cwd">{repoPath}</div> : null}
       <div className="sidebar-content">
         {totalFiles === 0 ? (
           <div className="sidebar-empty">No file changes</div>

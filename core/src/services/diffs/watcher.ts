@@ -1,6 +1,6 @@
 import chokidar from 'chokidar'
 
-import { getGitDiff, getGitDiffStaged } from './gitDiff'
+import { getGitDiff, getGitDiffStaged } from '../git/gitDiff'
 
 type DiffSnapshot = {
   unstaged: string

@@ -25,6 +25,14 @@
   letter-spacing: 0.1em;
 }
 
+.sidebar-cwd {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+  letter-spacing: 0.02em;
+  word-break: break-all;
+  margin-top: -6px;
+}
+
 .sidebar-content {
   display: flex;
   flex-direction: column;

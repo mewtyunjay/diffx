@@ -17,6 +17,7 @@ export function DiffViewer({ selectedFile, error, hasChanges, diffMode }: DiffVi
     () => ({
       diffStyle: diffMode,
       disableFileHeader: true,
+      overflow: 'wrap',
     }),
     [diffMode]
   )

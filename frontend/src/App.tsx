@@ -59,6 +59,9 @@ function App() {
   const [diffMode, setDiffMode] = useState<'unified' | 'split'>('split')
   const [pendingStage, setPendingStage] = useState<Set<string>>(new Set())
   const [pendingUnstage, setPendingUnstage] = useState<Set<string>>(new Set())
+  const [repoPath, setRepoPath] = useState<string | null>(null)
+  const [reviewOpen, setReviewOpen] = useState(true)
+  const [reviewMode, setReviewMode] = useState<'auto' | 'explain' | 'quiz'>('auto')
 
   const parsedStaged = useMemo(() => parseFileDiffs(stagedPatch, 'staged'), [stagedPatch])
   const parsedUnstaged = useMemo(() => parseFileDiffs(unstagedPatch, 'unstaged'), [unstagedPatch])
@@ -152,6 +155,20 @@ function App() {
     return () => window.clearInterval(interval)
   }, [load])
 
+  useEffect(() => {
+    let isMounted = true
+    fetch('http://localhost:3001/repo')
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => {
+        if (!isMounted || !data || typeof data.path !== 'string') return
+        setRepoPath(data.path)
+      })
+      .catch(() => null)
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
   const handleStageFile = useCallback((filePath: string) => {
     setPendingStage((prev) => new Set(prev).add(filePath))
     setPendingUnstage((prev) => {
@@ -186,27 +203,88 @@ function App() {
         stagedFiles={stagedFiles}
         unstagedFiles={unstagedFiles}
         selectedPath={selectedPath}
+        repoPath={repoPath}
         onSelectFile={(path) => setSelectedPath(path)}
         onStageFile={handleStageFile}
         onUnstageFile={handleUnstageFile}
       />
       <main className="main">
-        <section className="diff-panel">
-          <DiffToolbar
-            fileName={selectedFilename}
-            diffMode={diffMode}
-            onDiffModeChange={setDiffMode}
-            hasSelection={selectedFile != null}
-          />
-          <div className="main-content">
-            <DiffViewer
-              error={error}
-              hasChanges={hasChanges}
-              selectedFile={selectedFile?.fileDiff ?? null}
+        <div className={`workspace ${reviewOpen ? 'review-open' : 'review-closed'}`}>
+          <section className="diff-panel">
+            <DiffToolbar
+              fileName={selectedFilename}
               diffMode={diffMode}
+              onDiffModeChange={setDiffMode}
+              hasSelection={selectedFile != null}
             />
-          </div>
-        </section>
+            <div className="main-content">
+              <DiffViewer
+                error={error}
+                hasChanges={hasChanges}
+                selectedFile={selectedFile?.fileDiff ?? null}
+                diffMode={diffMode}
+              />
+            </div>
+          </section>
+          <aside className="review-drawer" aria-label="Review panel">
+            <section className="review-panel" aria-hidden={!reviewOpen}>
+              <div className="review-header">
+                <span>Review</span>
+                <button type="button" onClick={() => setReviewOpen(false)}>
+                  Close
+                </button>
+              </div>
+              <div className="review-tabs" role="tablist" aria-label="Review modes">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={reviewMode === 'auto'}
+                  className={reviewMode === 'auto' ? 'active' : undefined}
+                  onClick={() => setReviewMode('auto')}
+                >
+                  Auto
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={reviewMode === 'explain'}
+                  className={reviewMode === 'explain' ? 'active' : undefined}
+                  onClick={() => setReviewMode('explain')}
+                >
+                  Explain
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={reviewMode === 'quiz'}
+                  className={reviewMode === 'quiz' ? 'active' : undefined}
+                  onClick={() => setReviewMode('quiz')}
+                >
+                  Quiz
+                </button>
+              </div>
+              <div className="review-body">
+                {reviewMode === 'auto' && (
+                  <p>Auto mode will summarize the current diff and flag risky changes.</p>
+                )}
+                {reviewMode === 'explain' && (
+                  <p>Ask questions about the diff and get line-aware explanations.</p>
+                )}
+                {reviewMode === 'quiz' && (
+                  <p>Answer a short quiz about the change before committing.</p>
+                )}
+              </div>
+            </section>
+            <button
+              type="button"
+              className="review-rail"
+              aria-label={reviewOpen ? 'Collapse review panel' : 'Expand review panel'}
+              onClick={() => setReviewOpen((open) => !open)}
+            >
+              Review
+            </button>
+          </aside>
+        </div>
       </main>
     </div>
   )
