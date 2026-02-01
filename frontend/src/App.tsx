@@ -70,6 +70,25 @@ function App() {
   >([])
   const [reviewLoading, setReviewLoading] = useState(false)
   const [reviewError, setReviewError] = useState<string | null>(null)
+  const [quizQuestions, setQuizQuestions] = useState<
+    { id: string; prompt: string; options: string[]; answerIndex?: number }[]
+  >([])
+  const [quizAnswers, setQuizAnswers] = useState<Record<string, number | null>>({})
+  const [quizLoading, setQuizLoading] = useState(false)
+  const [quizError, setQuizError] = useState<string | null>(null)
+  const [quizSubmitted, setQuizSubmitted] = useState(false)
+  const [quizView, setQuizView] = useState<'quiz' | 'results'>('quiz')
+  const [quizResults, setQuizResults] = useState<
+    {
+      id: number
+      score: number
+      total: number
+      answered: number
+      completedAt: string
+      questions: { id: string; prompt: string; options: string[]; answerIndex?: number }[]
+      answers: Record<string, number | null>
+    }[]
+  >([])
 
   const parsedStaged = useMemo(() => parseFileDiffs(stagedPatch, 'staged'), [stagedPatch])
   const parsedUnstaged = useMemo(() => parseFileDiffs(unstagedPatch, 'unstaged'), [unstagedPatch])
@@ -157,11 +176,54 @@ function App() {
     }
   }, [])
 
+  const fetchQuiz = useCallback(async () => {
+    setQuizLoading(true)
+    setQuizError(null)
+    setQuizSubmitted(false)
+    try {
+      const response = await fetch('http://localhost:3001/ai/quiz', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ count: 5 }),
+      })
+      if (!response.ok) {
+        throw new Error(`Failed to build quiz (${response.status})`)
+      }
+      const data = (await response.json()) as {
+        questions?: { id?: string; prompt?: string; options?: string[]; answerIndex?: number }[]
+      }
+      const questions =
+        data.questions?.filter(
+          (question): question is { id: string; prompt: string; options: string[]; answerIndex?: number } =>
+            typeof question.id === 'string' &&
+            typeof question.prompt === 'string' &&
+            Array.isArray(question.options)
+        ) ?? []
+      setQuizQuestions(questions)
+      setQuizAnswers(
+        questions.reduce<Record<string, number | null>>((acc, question) => {
+          acc[question.id] = null
+          return acc
+        }, {})
+      )
+    } catch (error) {
+      setQuizError(error instanceof Error ? error.message : 'Failed to load quiz.')
+    } finally {
+      setQuizLoading(false)
+    }
+  }, [])
+
   useEffect(() => {
     void load()
     const interval = window.setInterval(load, 1000)
     return () => window.clearInterval(interval)
   }, [load])
+
+  useEffect(() => {
+    if (reviewMode !== 'quiz') return
+    if (quizQuestions.length > 0 || quizLoading) return
+    void fetchQuiz()
+  }, [reviewMode, quizQuestions.length, quizLoading, fetchQuiz])
 
   useEffect(() => {
     let isMounted = true
@@ -238,6 +300,36 @@ function App() {
     }
   }, [reviewInput, reviewLoading, selectedPath])
 
+  const handleQuizSelect = useCallback((questionId: string, optionIndex: number) => {
+    setQuizAnswers((prev) => ({ ...prev, [questionId]: optionIndex }))
+  }, [])
+
+  const handleQuizSubmit = useCallback(() => {
+    const total = quizQuestions.length
+    const answered = Object.values(quizAnswers).filter((value) => value != null).length
+    const score = quizQuestions.reduce((sum, question) => {
+      const answer = quizAnswers[question.id]
+      if (answer == null) return sum
+      if (question.answerIndex == null) return sum
+      return sum + (answer === question.answerIndex ? 1 : 0)
+    }, 0)
+    const completedAt = new Date().toLocaleString()
+    setQuizResults((prev) => [
+      {
+        id: Date.now(),
+        score,
+        total,
+        answered,
+        completedAt,
+        questions: quizQuestions,
+        answers: quizAnswers,
+      },
+      ...prev,
+    ])
+    setQuizSubmitted(true)
+    setQuizView('results')
+  }, [quizAnswers, quizQuestions])
+
   return (
     <div className="app">
       <Sidebar
@@ -278,6 +370,12 @@ function App() {
                     setReviewLog([])
                     setReviewError(null)
                     setReviewInput('')
+                    setQuizQuestions([])
+                    setQuizAnswers({})
+                    setQuizError(null)
+                    setQuizSubmitted(false)
+                    setQuizResults([])
+                    setQuizView('quiz')
                   }}
                 >
                   Clear
@@ -323,9 +421,133 @@ function App() {
                   </div>
                 )}
                 {reviewMode === 'quiz' && (
-                  <p>Answer a short quiz about the change before committing.</p>
+                  <div className="quiz-panel">
+                    {quizView === 'results' ? (
+                      <div className="quiz-results">
+                        <div className="quiz-results-header">
+                          <span>Results</span>
+                          <span>{quizResults.length} attempt(s)</span>
+                        </div>
+                        {quizResults.length === 0 ? (
+                          <p>No results yet. Take a quiz first.</p>
+                        ) : (
+                          <div className="quiz-results-list">
+                            {quizResults.map((result, resultIndex) => (
+                              <details key={result.id} className="quiz-result-card">
+                                <summary>
+                                  <span>
+                                    Attempt {quizResults.length - resultIndex} • {result.completedAt}
+                                  </span>
+                                  <span>
+                                    Score {result.score}/{result.total} ({result.answered} attempted)
+                                  </span>
+                                </summary>
+                                <div className="quiz-result-questions">
+                                  {result.questions.map((question, index) => {
+                                    const chosen = result.answers[question.id]
+                                    return (
+                                      <div key={question.id} className="quiz-result-question">
+                                        <div className="quiz-question">
+                                          <span className="quiz-index">Q{index + 1}</span>
+                                          <p>{question.prompt}</p>
+                                        </div>
+                                        <div className="quiz-options">
+                                          {question.options.map((option, optionIndex) => {
+                                            const isSelected = chosen === optionIndex
+                                            const isCorrect = question.answerIndex === optionIndex
+                                            return (
+                                              <div
+                                                key={`${question.id}:${optionIndex}`}
+                                                className={`quiz-option-result${isSelected ? ' selected' : ''}${
+                                                  isCorrect ? ' correct' : ''
+                                                }`}
+                                              >
+                                                <span>{option}</span>
+                                              </div>
+                                            )
+                                          })}
+                                        </div>
+                                      </div>
+                                    )
+                                  })}
+                                </div>
+                              </details>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <>
+                        {quizLoading && <p className="review-status">Generating quiz…</p>}
+                        {quizError && <p className="review-error">{quizError}</p>}
+                        {!quizLoading && !quizError && quizQuestions.length === 0 && (
+                          <p>No quiz yet. Try again in a moment.</p>
+                        )}
+                        {!quizLoading && !quizError && quizQuestions.length > 0 && (
+                          <div className="quiz-list">
+                            {quizQuestions.map((question, index) => (
+                              <div key={question.id} className="quiz-card">
+                                <div className="quiz-question">
+                                  <span className="quiz-index">Q{index + 1}</span>
+                                  <p>{question.prompt}</p>
+                                </div>
+                                <div className="quiz-options">
+                                  {question.options.map((option, optionIndex) => (
+                                    <button
+                                      key={`${question.id}:${optionIndex}`}
+                                      type="button"
+                                      className={
+                                        quizAnswers[question.id] === optionIndex ? 'selected' : undefined
+                                      }
+                                      onClick={() => handleQuizSelect(question.id, optionIndex)}
+                                    >
+                                      {option}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
                 )}
               </div>
+              {reviewMode === 'quiz' && (
+                <div className="review-footer">
+                  <span>
+                    Attempted {Object.values(quizAnswers).filter((value) => value != null).length}/
+                    {quizQuestions.length}
+                  </span>
+                  <div className="quiz-footer-actions">
+                    <button
+                      type="button"
+                      className="quiz-history"
+                      onClick={() => setQuizView((view) => (view === 'results' ? 'quiz' : 'results'))}
+                      aria-label="Quiz history"
+                      aria-pressed={quizView === 'results'}
+                    >
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path
+                          d="M8 6H3v5m1.6-1.7A8 8 0 1 1 6 18"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="square"
+                        />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleQuizSubmit}
+                      disabled={quizQuestions.length === 0}
+                    >
+                      {quizSubmitted ? 'Submitted' : 'Submit'}
+                    </button>
+                  </div>
+                </div>
+              )}
               {reviewMode === 'explain' && (
                 <div className="review-chat">
                   <input

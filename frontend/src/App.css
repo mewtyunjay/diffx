@@ -233,6 +233,212 @@
   color: var(--accent-del);
 }
 
+.quiz-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+}
+
+.quiz-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.quiz-card {
+  border: 2px solid var(--border-subtle);
+  padding: 12px;
+  background: var(--bg-panel-muted);
+}
+
+.quiz-question {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.quiz-index {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+}
+
+.quiz-question p {
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.quiz-options {
+  margin-top: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.quiz-options button {
+  text-align: left;
+  border: 2px solid var(--border-subtle);
+  background: transparent;
+  color: var(--text-primary);
+  padding: 8px 10px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.quiz-options button.selected {
+  border-color: var(--border-strong);
+  background: var(--bg-panel);
+  box-shadow: inset 0 0 0 2px var(--border-strong);
+}
+
+.quiz-results {
+  border: none;
+  padding: 0;
+  background: transparent;
+}
+
+.quiz-results-header {
+  display: flex;
+  justify-content: space-between;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+.quiz-results-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.quiz-result-card {
+  border: none;
+  padding: 12px 0;
+  background: transparent;
+}
+
+.quiz-result-card + .quiz-result-card {
+  border-top: 1px solid var(--border-subtle);
+}
+
+.quiz-result-card summary {
+  display: flex;
+  justify-content: space-between;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+
+.quiz-result-card[open] summary {
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+.quiz-result-card summary::-webkit-details-marker {
+  display: none;
+}
+
+.quiz-result-meta {
+  display: flex;
+  justify-content: space-between;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+.quiz-result-questions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.quiz-option-result {
+  border: 1px solid var(--border-subtle);
+  border-left: 2px solid transparent;
+  padding: 6px 10px;
+  color: var(--text-primary);
+  background: transparent;
+  font-size: 0.85rem;
+}
+
+.quiz-option-result.selected {
+  border-left-color: var(--border-strong);
+  background: rgba(148, 163, 184, 0.08);
+}
+
+.quiz-option-result.correct {
+  border-left-color: var(--accent-add);
+  background: rgba(52, 211, 153, 0.1);
+}
+
+.quiz-footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.quiz-footer-actions .quiz-history {
+  height: 32px;
+  width: 32px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: 2px solid var(--border-strong);
+  color: var(--text-primary);
+}
+
+.quiz-footer-actions .quiz-history[aria-pressed='true'] {
+  background: var(--bg-panel);
+  box-shadow: inset 0 0 0 2px var(--border-strong);
+}
+
+.quiz-footer-actions .quiz-history[aria-pressed='true'] svg {
+  color: var(--text-inverse);
+}
+
+.quiz-footer-actions .quiz-history svg {
+  width: 16px;
+  height: 16px;
+}
+
+.review-footer {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 2px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.review-footer button {
+  border: 2px solid var(--border-strong);
+  background: var(--bg-panel-muted);
+  color: var(--text-primary);
+  padding: 6px 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.7rem;
+  height: 36px;
+  cursor: pointer;
+}
+
+.review-footer button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .review-chat {
   margin-top: 14px;
   display: grid;
