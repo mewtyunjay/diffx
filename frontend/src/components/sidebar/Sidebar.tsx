@@ -15,6 +15,10 @@ type SidebarProps = {
   unstagedFiles: SidebarFile[]
   selectedPath: string | null
   repoPath: string | null
+  hasQuizResult: boolean
+  strictMode: boolean
+  onToggleStrictMode: () => void
+  strictModeNotice: string | null
   commitMessageSettings: CommitMessageSettings
   onSelectFile: (path: string) => void
   onStageFile: (filePath: string) => void
@@ -29,6 +33,10 @@ export function Sidebar({
   unstagedFiles,
   selectedPath,
   repoPath,
+  hasQuizResult,
+  strictMode,
+  onToggleStrictMode,
+  strictModeNotice,
   commitMessageSettings,
   onSelectFile,
   onStageFile,
@@ -49,6 +57,8 @@ export function Sidebar({
   const [stashError, setStashError] = useState<string | null>(null)
   const [stashConfirmOpen, setStashConfirmOpen] = useState(false)
   const canCommit = Boolean(repoPath) && stagedFiles.length > 0
+  const canCommitStrict = canCommit && (!strictMode || hasQuizResult)
+  const canPush = Boolean(repoPath) && (!strictMode || hasQuizResult)
   const hasChanges = totalFiles > 0
 
   const handleCommit = async () => {
@@ -229,16 +239,48 @@ export function Sidebar({
       </div>
       <div className="sidebar-actions">
         <div className="sidebar-separator" />
+        <button
+          type="button"
+          className="sidebar-strict-mode"
+          aria-pressed={strictMode}
+          onClick={onToggleStrictMode}
+          title={
+            strictMode
+              ? "Strict mode is on. You can't push code without taking a quiz."
+              : 'Strict mode is off. Click to require a quiz before pushing.'
+          }
+          aria-label="Strict mode"
+        >
+          <span>STRICT MODE</span>
+          <span className="strict-toggle" aria-hidden="true">
+            <span className="strict-toggle-track">
+              <span className="strict-toggle-thumb" />
+            </span>
+            <span className="strict-toggle-label">{strictMode ? 'ON' : 'OFF'}</span>
+          </span>
+        </button>
+        {strictModeNotice ? (
+          <div className="sidebar-strict-notice" role="status" aria-live="polite">
+            {strictModeNotice}
+          </div>
+        ) : null}
         <div className="sidebar-action-row">
           <button
             type="button"
             className="sidebar-action-btn"
             onClick={() => {
-              if (!canCommit) return
+              if (!canCommitStrict) return
               setCommitOpen(true)
               setCommitError(null)
             }}
-            disabled={!canCommit || commitLoading}
+            disabled={!canCommitStrict || commitLoading}
+            title={
+              canCommitStrict
+                ? 'Commit staged changes'
+                : strictMode
+                  ? 'Complete a quiz before committing.'
+                  : 'Commit staged changes'
+            }
           >
             Commit
           </button>
@@ -246,7 +288,14 @@ export function Sidebar({
             type="button"
             className="sidebar-action-btn"
             onClick={() => void handlePush()}
-            disabled={!repoPath || pushLoading}
+            disabled={!canPush || pushLoading}
+            title={
+              canPush
+                ? 'Push to remote'
+                : strictMode
+                  ? "You can't push code without taking a quiz."
+                  : 'Push to remote'
+            }
           >
             Push
           </button>

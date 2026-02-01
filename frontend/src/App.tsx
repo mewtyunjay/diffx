@@ -97,6 +97,7 @@ function App() {
     completedAt: string
     questions: QuizQuestion[]
     answers: Record<string, number | null>
+    diffHash?: string
   }
 
   const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([])
@@ -106,6 +107,12 @@ function App() {
   const [quizSubmitted, setQuizSubmitted] = useState(false)
   const [quizView, setQuizView] = useState<'quiz' | 'results'>('quiz')
   const [quizResults, setQuizResults] = useState<QuizResult[]>([])
+  const [strictMode, setStrictMode] = useState(true)
+  const [strictModeNotice, setStrictModeNotice] = useState<string | null>(null)
+  const [currentDiffHash, setCurrentDiffHash] = useState<string | null>(null)
+  const hasQuizResultForDiff =
+    typeof currentDiffHash === 'string' &&
+    quizResults.some((result) => result.diffHash === currentDiffHash)
 
   type ReviewFinding = {
     category: 'bug' | 'security' | 'quality'
@@ -189,9 +196,10 @@ function App() {
       if (!response.ok) {
         throw new Error(`Failed to load diff (${response.status})`)
       }
-      const data = (await response.json()) as { unstaged?: string; staged?: string }
+      const data = (await response.json()) as { unstaged?: string; staged?: string; diffHash?: string }
       const unstaged = data.unstaged ?? ''
       const staged = data.staged ?? ''
+      setCurrentDiffHash(typeof data.diffHash === 'string' ? data.diffHash : null)
 
       setUnstagedPatch(unstaged)
       setStagedPatch(staged)
@@ -380,10 +388,13 @@ function App() {
 
   const handleCommit = useCallback(
     async (message: string) => {
+      if (strictMode && !hasQuizResultForDiff) {
+        throw new Error('Complete a quiz before committing.')
+      }
       const response = await fetch('http://localhost:3001/git/commit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message }),
+        body: JSON.stringify({ message, strictMode }),
       })
       if (!response.ok) {
         let detail = `Failed to commit (${response.status})`
@@ -399,13 +410,17 @@ function App() {
       }
       await load()
     },
-    [load]
+    [hasQuizResultForDiff, load, strictMode]
   )
 
   const handlePush = useCallback(async () => {
+    if (strictMode && !hasQuizResultForDiff) {
+      throw new Error('Complete a quiz before pushing.')
+    }
     const response = await fetch('http://localhost:3001/git/push', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ strictMode }),
     })
     if (!response.ok) {
       let detail = `Failed to push (${response.status})`
@@ -419,7 +434,13 @@ function App() {
       }
       throw new Error(detail)
     }
-  }, [])
+  }, [hasQuizResultForDiff, strictMode])
+
+  useEffect(() => {
+    if (!strictModeNotice) return
+    const timeout = window.setTimeout(() => setStrictModeNotice(null), 2500)
+    return () => window.clearTimeout(timeout)
+  }, [strictModeNotice])
 
   const handleStash = useCallback(async () => {
     const response = await fetch('http://localhost:3001/git/stash', {
@@ -501,13 +522,29 @@ function App() {
       completedAt,
       questions: quizQuestions,
       answers: quizAnswers,
+      diffHash: currentDiffHash ?? undefined,
     }
     setQuizResults((prev) => [result, ...prev])
     fetch('http://localhost:3001/quiz/results', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ result }),
-    }).catch((error) => console.error('Failed to save quiz result:', error))
+    })
+      .then(async (response) => {
+        if (!response.ok) return
+        const data = (await response.json()) as { result?: QuizResult }
+        if (!data.result) return
+        setQuizResults((prev) => {
+          const next = [...prev]
+          const index = next.findIndex((item) => item.id === data.result?.id)
+          if (index === -1) {
+            return [data.result, ...prev]
+          }
+          next[index] = data.result
+          return next
+        })
+      })
+      .catch((error) => console.error('Failed to save quiz result:', error))
     setQuizSubmitted(true)
     setQuizView('results')
   }, [quizAnswers, quizQuestions])
@@ -519,6 +556,18 @@ function App() {
         unstagedFiles={unstagedFiles}
         selectedPath={selectedPath}
         repoPath={repoPath}
+        hasQuizResult={hasQuizResultForDiff}
+        strictMode={strictMode}
+        strictModeNotice={strictModeNotice}
+        onToggleStrictMode={() => {
+          setStrictMode((prev) => {
+            const next = !prev
+            if (next) {
+              setStrictModeNotice('Pre-commit quiz must be completed.')
+            }
+            return next
+          })
+        }}
         commitMessageSettings={settings.commitMessage}
         onSelectFile={(path) => setSelectedPath(path)}
         onStageFile={handleStageFile}

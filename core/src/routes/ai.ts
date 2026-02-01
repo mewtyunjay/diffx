@@ -7,7 +7,7 @@ import { buildQuiz } from '../services/ai/quiz'
 import { answerQuestion, decideScope } from '../services/ai/review'
 import { generateCommitMessage, type CommitMessageStyle } from '../services/ai/commitMessage'
 import { runCodeReview } from '../services/ai/codeReview'
-import { appendQuizResult, readQuizResults } from '../services/quizResults'
+import { appendQuizResult, computeDiffHash, readQuizResults } from '../services/quizResults'
 
 export const aiRouter = Router()
 
@@ -194,7 +194,10 @@ aiRouter.post('/quiz/results', async (req, res) => {
   }
 
   try {
-    const stored = await appendQuizResult(repoPath, payload)
+    const latest = getLatestDiff()
+    const fullDiff = buildCombinedDiff(latest)
+    const diffHash = computeDiffHash(fullDiff)
+    const stored = await appendQuizResult(repoPath, { ...payload, diffHash })
     res.json({ result: stored })
   } catch (error) {
     console.error('Failed to save quiz result:', error)

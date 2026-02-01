@@ -1,5 +1,6 @@
 import { promises as fs } from 'fs'
 import path from 'path'
+import { createHash } from 'node:crypto'
 
 type QuizQuestion = {
   id: string
@@ -17,6 +18,7 @@ export type QuizResult = {
   completedAt: string
   questions: QuizQuestion[]
   answers: Record<string, number | null>
+  diffHash?: string
 }
 
 const RESULTS_DIR_NAME = 'quiz-results'
@@ -51,4 +53,8 @@ export async function appendQuizResult(repoPath: string, result: QuizResult): Pr
   const next = [result, ...existing]
   await fs.writeFile(getResultsFile(repoPath), JSON.stringify(next, null, 2), 'utf-8')
   return result
+}
+
+export function computeDiffHash(diff: string): string {
+  return createHash('sha256').update(diff).digest('hex')
 }
