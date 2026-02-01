@@ -1,34 +1,89 @@
 .diff-viewer {
   width: 100%;
-  padding: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-  overflow: hidden;
-}
-
-diffs-container {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
 }
 
 .diff-empty {
-  padding: 32px 20px;
+  flex: 1;
+  min-height: 240px;
+  display: flex;
+  align-items: center;
+  padding: 24px 20px;
   text-align: left;
   color: var(--text-muted);
   font-weight: 500;
-  border: 2px dashed var(--border-subtle);
-  background: var(--bg-panel-muted);
+  border-top: 2px dashed var(--border-subtle);
+  background: var(--bg-panel);
 }
 
-.diffs-list {
-  display: grid;
-  gap: 16px;
-}
-
-.diff-card {
-  border: 2px solid var(--border-strong);
-  border-radius: 0;
+.diff-surface {
+  flex: 1;
+  min-height: 0;
+  background: transparent;
   overflow: hidden;
-  background: #0d0f14;
-  color: #e5e7eb;
+  display: flex;
+}
+
+.diff-scroll {
+  height: 100%;
+  flex: 1;
+  overflow: auto;
+  padding: 0;
+  color: var(--text-primary);
+  font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    'Liberation Mono', 'Courier New', monospace;
+  font-size: 0.85rem;
+  line-height: 1.55;
+  background: var(--bg-panel);
+}
+
+.diff-scroll > * {
+  width: 100%;
+  margin: 0;
+}
+
+.diff-scroll table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--bg-panel);
+  margin: 0;
+}
+
+.diff-scroll pre {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.diff-scroll code {
+  font-size: 0.85rem;
+}
+
+.diff-scroll .shiki,
+.diff-scroll .shiki code,
+.diff-scroll .shiki pre {
+  background: var(--bg-panel) !important;
+}
+
+.diff-scroll [style*='--shiki-background'] {
+  background: var(--bg-panel) !important;
+}
+
+.diff-scroll td,
+.diff-scroll th {
+  padding: 0;
+  vertical-align: top;
+  border: none;
+  background: var(--bg-panel);
+}
+
+.diff-scroll tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.diff-scroll * {
+  border-radius: 0;
+  box-shadow: none;
 }

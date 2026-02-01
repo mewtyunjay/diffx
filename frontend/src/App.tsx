@@ -191,20 +191,22 @@ function App() {
         onUnstageFile={handleUnstageFile}
       />
       <main className="main">
-        <DiffToolbar
-          fileName={selectedFilename}
-          diffMode={diffMode}
-          onDiffModeChange={setDiffMode}
-          hasSelection={selectedFile != null}
-        />
-        <div className="main-content">
-          <DiffViewer
-            error={error}
-            hasChanges={hasChanges}
-            selectedFile={selectedFile?.fileDiff ?? null}
+        <section className="diff-panel">
+          <DiffToolbar
+            fileName={selectedFilename}
             diffMode={diffMode}
+            onDiffModeChange={setDiffMode}
+            hasSelection={selectedFile != null}
           />
-        </div>
+          <div className="main-content">
+            <DiffViewer
+              error={error}
+              hasChanges={hasChanges}
+              selectedFile={selectedFile?.fileDiff ?? null}
+              diffMode={diffMode}
+            />
+          </div>
+        </section>
       </main>
     </div>
   )

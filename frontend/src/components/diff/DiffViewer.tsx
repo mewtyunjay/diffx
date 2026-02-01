@@ -30,11 +30,11 @@ export function DiffViewer({ selectedFile, error, hasChanges, diffMode }: DiffVi
       ) : selectedFile == null ? (
         <div className="diff-empty">Select a file to view its diff.</div>
       ) : (
-        <div className="diffs-list">
-          <section className="diff-card">
+        <section className="diff-surface" aria-label="File diff">
+          <div className="diff-scroll">
             <FileDiff fileDiff={selectedFile} options={fileOptions} />
-          </section>
-        </div>
+          </div>
+        </section>
       )}
     </div>
   )

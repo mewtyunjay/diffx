@@ -1,16 +1,28 @@
 .app {
   display: grid;
   grid-template-columns: 320px 1fr;
-  min-height: 100vh;
+  height: 100vh;
   background: var(--bg-app);
+  overflow: hidden;
 }
 
 .main {
   display: flex;
   flex-direction: column;
-  padding: 24px 28px;
+  padding: 20px 22px 24px;
   gap: 16px;
-  background: var(--bg-app);
+  background: transparent;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.diff-panel {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border: 2px solid var(--border-strong);
+  background: var(--bg-panel);
   overflow: hidden;
 }
 
@@ -20,7 +32,7 @@
   align-items: stretch;
   justify-content: flex-start;
   min-height: 0;
-  overflow: auto;
+  overflow: hidden;
 }
 
 @media (max-width: 720px) {
@@ -29,6 +41,6 @@
   }
 
   .main {
-    padding: 18px;
+    padding: 16px;
   }
 }

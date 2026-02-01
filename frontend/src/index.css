@@ -4,21 +4,21 @@
   font-family: 'Space Grotesk', sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  color-scheme: light;
-  background-color: #0f1115;
+  color-scheme: dark;
+  background-color: #0b0d12;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  --bg-app: #f6f4ef;
-  --bg-sidebar: #111318;
-  --bg-panel: #ffffff;
-  --bg-panel-muted: #f1efe8;
-  --border-strong: #1f1f1f;
-  --border-subtle: #c8c3b7;
-  --text-primary: #101216;
-  --text-muted: #5a5f6a;
-  --text-inverse: #f3f4f6;
-  --accent-add: #1f9d55;
-  --accent-del: #cc2c2c;
+  --bg-app: #0b0d12;
+  --bg-sidebar: #0a0c11;
+  --bg-panel: #11151d;
+  --bg-panel-muted: #171c26;
+  --border-strong: #3a4355;
+  --border-subtle: #2a3241;
+  --text-primary: #e6e9ef;
+  --text-muted: #9aa3b2;
+  --text-inverse: #f8fafc;
+  --accent-add: #34d399;
+  --accent-del: #f87171;
 }
 
 * {
@@ -30,6 +30,7 @@
 body {
   min-height: 100vh;
   background: var(--bg-app);
+  overflow: hidden;
 }
 
 button {
@@ -46,7 +47,7 @@ code {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.5);
+  background: rgba(148, 163, 184, 0.35);
   border-radius: 999px;
 }
 
